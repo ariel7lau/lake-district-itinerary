@@ -1,0 +1,1388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Lake District — Nine Slow Days, North to South</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,400..600&family=Newsreader:ital,opsz,wght@0,6..72,300..600;1,6..72,300..500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<style>
+  :root{
+    --paper:#f3ece0;
+    --paper-2:#ece2d1;
+    --paper-3:#e6dcc8;
+    --ink:#22281e;
+    --ink-soft:#4d5343;
+    --ink-faint:#7c7b6c;
+    --moss:#4f5b3c;
+    --moss-deep:#3a4430;
+    --heather:#7a5a78;
+    --slate:#52666c;
+    --rust:#a85a36;
+    --line:rgba(34,40,30,0.14);
+    --line-strong:rgba(34,40,30,0.28);
+    --shadow:0 1px 2px rgba(34,40,30,.06),0 8px 30px -12px rgba(34,40,30,.22);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"Newsreader",Georgia,serif;
+    font-optical-sizing:auto;
+    font-size:18px;
+    line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  .wrap{max-width:920px;margin:0 auto;padding:0 28px}
+
+  /* ---- decorative contour texture ---- */
+  .contours{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.5}
+  .contours svg{position:absolute;width:760px;height:760px;color:var(--moss)}
+  .contours .c1{top:-220px;right:-260px;opacity:.13}
+  .contours .c2{bottom:-300px;left:-280px;opacity:.10;color:var(--slate)}
+  main{position:relative;z-index:1}
+
+  /* ---- typography ---- */
+  h1,h2,h3{font-family:"Fraunces",Georgia,serif;font-weight:400;line-height:1.05;letter-spacing:-.01em}
+  .eyebrow{font-family:"Fraunces",serif;font-size:.72rem;letter-spacing:.34em;text-transform:uppercase;color:var(--moss);font-weight:500}
+  .tag{display:inline-block;font-family:"Fraunces",serif;font-size:.62rem;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-soft);
+    border:1px solid var(--line-strong);border-radius:100px;padding:.32em .8em;font-weight:500}
+  .tag.nature{color:var(--moss)}
+  .tag.culture{color:var(--heather)}
+  .tag.relax{color:var(--slate)}
+  .tag.drive{color:var(--rust)}
+
+  /* ---- hero ---- */
+  header.hero{padding:120px 0 70px;position:relative}
+  .hero .kicker{display:flex;align-items:center;gap:14px;margin-bottom:30px}
+  .hero .kicker .rule{height:1px;flex:0 0 56px;background:var(--line-strong)}
+  .hero h1{font-size:clamp(3.3rem,9vw,6.4rem);font-optical-sizing:auto;margin:0 0 6px}
+  .hero h1 em{font-style:italic;color:var(--moss)}
+  .hero .sub{font-family:"Fraunces",serif;font-style:italic;font-size:clamp(1.25rem,3.4vw,1.9rem);color:var(--ink-soft);font-weight:300;margin-bottom:34px}
+  .hero-meta{display:flex;flex-wrap:wrap;gap:10px 12px;align-items:center}
+  .chip{display:inline-flex;align-items:center;gap:8px;background:var(--paper-2);border:1px solid var(--line);
+    border-radius:100px;padding:.5em 1.05em;font-size:.9rem;color:var(--ink-soft);box-shadow:var(--shadow)}
+  .chip b{font-family:"Fraunces",serif;font-weight:500;color:var(--ink)}
+  .lede{margin-top:42px;max-width:680px;font-size:1.18rem;color:var(--ink-soft)}
+  .lede strong{color:var(--ink);font-weight:500}
+
+  /* ---- section frame ---- */
+  section{padding:54px 0;border-top:1px solid var(--line)}
+  .sec-head{display:flex;align-items:baseline;gap:18px;margin-bottom:30px}
+  .sec-head h2{font-size:clamp(1.8rem,4.5vw,2.6rem)}
+  .sec-num{font-family:"Fraunces",serif;font-size:.85rem;color:var(--moss);letter-spacing:.2em;font-weight:500}
+
+  /* ---- overview cards ---- */
+  .why{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+  .why-card{background:var(--paper-2);border:1px solid var(--line);border-radius:14px;padding:24px 24px 26px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+  .why-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--moss)}
+  .why-card:nth-child(2)::before{background:var(--heather)}
+  .why-card:nth-child(3)::before{background:var(--slate)}
+  .why-card:nth-child(4)::before{background:var(--rust)}
+  .why-card h3{font-size:1.18rem;margin-bottom:8px}
+  .why-card p{font-size:.98rem;color:var(--ink-soft)}
+
+  /* ---- day blocks ---- */
+  .day{display:grid;grid-template-columns:118px 1fr;gap:30px;padding:46px 0;border-top:1px dashed var(--line-strong)}
+  .day:first-of-type{border-top:none;padding-top:8px}
+  .day-index{position:relative}
+  .day-index .n{font-family:"Fraunces",serif;font-size:3.6rem;line-height:.85;color:var(--moss);font-weight:300}
+  .day-index .dow{font-family:"Fraunces",serif;font-size:.7rem;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-faint);margin-top:12px}
+  .day-index .date{font-size:.95rem;color:var(--ink-soft);font-weight:500}
+  .day-index .base{margin-top:14px;font-size:.74rem;letter-spacing:.04em;color:var(--ink-faint);border-top:1px solid var(--line);padding-top:10px;line-height:1.45}
+  .day-index .base b{display:block;font-family:"Fraunces",serif;color:var(--ink);font-weight:500;font-size:.95rem;letter-spacing:0}
+
+  .day-body h3{font-size:1.7rem;margin-bottom:6px}
+  .day-narr{color:var(--ink-soft);font-style:italic;font-family:"Fraunces",serif;font-weight:300;margin-bottom:22px;font-size:1.08rem}
+  .tags{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:22px}
+
+  .stop{position:relative;padding:0 0 22px 30px;border-left:1px solid var(--line-strong);margin-left:6px}
+  .stop:last-child{padding-bottom:0}
+  .stop::before{content:"";position:absolute;left:-5px;top:6px;width:9px;height:9px;border-radius:50%;background:var(--moss);box-shadow:0 0 0 4px var(--paper)}
+  .stop.cult::before{background:var(--heather)}
+  .stop.rest::before{background:var(--slate)}
+  .stop .time{font-family:"Fraunces",serif;font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:var(--rust);font-weight:600}
+  .stop .name{font-family:"Fraunces",serif;font-size:1.2rem;font-weight:500;margin:1px 0 5px}
+  .stop p{font-size:.99rem;color:var(--ink-soft)}
+  .hours{display:inline-block;margin-top:8px;font-size:.78rem;color:var(--ink-faint);background:var(--paper-3);border:1px solid var(--line);border-radius:6px;padding:.18em .65em}
+  .hours.warn{color:var(--rust);border-color:rgba(168,90,54,.35)}
+
+  /* ---- stay & logistics ---- */
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:26px}
+  .panel{background:var(--paper-2);border:1px solid var(--line);border-radius:14px;padding:26px 28px;box-shadow:var(--shadow)}
+  .panel h3{font-size:1.35rem;margin-bottom:6px}
+  .panel .where{font-size:.8rem;letter-spacing:.04em;color:var(--moss);font-family:"Fraunces",serif;font-weight:500;margin-bottom:14px}
+  .panel p{font-size:.98rem;color:var(--ink-soft);margin-bottom:12px}
+  .panel p:last-child{margin-bottom:0}
+  .search{display:flex;flex-wrap:wrap;gap:7px;margin-top:6px}
+  .search span{font-size:.78rem;background:var(--paper-3);border:1px solid var(--line);border-radius:6px;padding:.22em .6em;color:var(--ink-soft);font-style:italic}
+
+  ul.clean{list-style:none}
+  ul.clean li{position:relative;padding-left:24px;margin-bottom:13px;font-size:1rem;color:var(--ink-soft)}
+  ul.clean li::before{content:"";position:absolute;left:2px;top:11px;width:7px;height:7px;border:1px solid var(--moss);transform:rotate(45deg)}
+  ul.clean li b{color:var(--ink);font-weight:500}
+
+  .book-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:6px}
+  .book{background:var(--paper-2);border:1px solid var(--line);border-radius:12px;padding:18px 20px}
+  .book .lbl{font-family:"Fraunces",serif;font-size:.95rem;font-weight:500;margin-bottom:4px}
+  .book .why{font-size:.88rem;color:var(--ink-soft)}
+
+  .events .ev{display:grid;grid-template-columns:130px 1fr;gap:18px;padding:16px 0;border-top:1px solid var(--line)}
+  .events .ev:first-of-type{border-top:none}
+  .events .ev .when{font-family:"Fraunces",serif;font-size:.9rem;color:var(--heather);font-weight:500}
+  .events .ev p{font-size:.96rem;color:var(--ink-soft)}
+  .events .ev p b{color:var(--ink)}
+
+  .note{background:linear-gradient(180deg,var(--paper-2),var(--paper-3));border:1px solid var(--line-strong);
+    border-radius:14px;padding:24px 28px;margin-top:6px}
+  .note h3{font-size:1.2rem;margin-bottom:8px;color:var(--moss-deep)}
+  .note p{color:var(--ink-soft);font-size:1rem}
+
+  /* ---- food line in days ---- */
+  .food{margin-top:22px;padding:15px 18px;background:var(--paper-3);border:1px solid var(--line);border-radius:10px;border-left:3px solid var(--rust)}
+  .food .lab{font-family:"Fraunces",serif;font-size:.66rem;letter-spacing:.22em;text-transform:uppercase;color:var(--rust);font-weight:600;margin-bottom:9px}
+  .food .row{display:flex;gap:10px;font-size:.95rem;color:var(--ink-soft);margin-bottom:6px;align-items:baseline}
+  .food .row:last-child{margin-bottom:0}
+  .food .row b{font-family:"Fraunces",serif;color:var(--ink);font-weight:500}
+  .food .k{flex:0 0 58px;color:var(--ink-faint);font-style:italic;font-size:.82rem;text-transform:lowercase}
+
+  /* ---- stay cards ---- */
+  .stay-base{margin-bottom:30px}
+  .stay-base > .where{font-family:"Fraunces",serif;font-size:.82rem;letter-spacing:.04em;color:var(--moss);font-weight:500;margin-bottom:14px;display:flex;align-items:center;gap:12px}
+  .stay-base > .where::after{content:"";flex:1;height:1px;background:var(--line)}
+  .stay-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:14px}
+  .stay-card{background:var(--paper-2);border:1px solid var(--line);border-radius:12px;padding:20px 22px;box-shadow:var(--shadow)}
+  .stay-card .pin{font-family:"Fraunces",serif;font-size:.64rem;letter-spacing:.2em;text-transform:uppercase;font-weight:600;margin-bottom:10px;display:inline-block;padding:.24em .62em;border-radius:5px}
+  .stay-card .pin.uniq{color:var(--moss-deep);background:rgba(79,91,60,.12)}
+  .stay-card .pin.hotel{color:var(--heather);background:rgba(122,90,120,.13)}
+  .stay-card h4{font-family:"Fraunces",serif;font-size:1.16rem;font-weight:500;margin-bottom:5px;letter-spacing:-.01em}
+  .stay-card p{font-size:.92rem;color:var(--ink-soft)}
+  .stay-card .alt{font-size:.85rem;color:var(--ink-faint);margin-top:10px;border-top:1px solid var(--line);padding-top:10px}
+  .stay-card .alt b{color:var(--ink-soft);font-weight:500}
+  .airbnb-line{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:.86rem;color:var(--ink-faint);font-style:italic}
+  .airbnb-line .lab{font-style:normal;font-family:"Fraunces",serif;font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);margin-right:2px}
+
+  /* ---- night-by-night strip ---- */
+  .nightstrip{display:flex;gap:7px;margin:0 0 28px;flex-wrap:wrap}
+  .nightstrip .nc{flex:1;min-width:98px;border-radius:11px;padding:14px 15px;border:1px solid var(--line)}
+  .nightstrip .nc.a{background:rgba(79,91,60,.10);border-color:rgba(79,91,60,.32)}
+  .nightstrip .nc.b{background:rgba(122,90,120,.10);border-color:rgba(122,90,120,.34)}
+  .nightstrip .nc .nn{font-family:"Fraunces",serif;font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-faint)}
+  .nightstrip .nc .nm{font-family:"Fraunces",serif;font-weight:500;font-size:.95rem;margin-top:4px;line-height:1.2}
+  .nightstrip .nc .dt{font-size:.78rem;color:var(--ink-soft);margin-top:3px}
+  .stay-why{font-size:.92rem;color:var(--ink-soft);margin-top:12px;border-top:1px solid var(--line);padding-top:11px}
+  .stay-why b{color:var(--ink);font-weight:500}
+
+  /* ---- trip map ---- */
+  .map-wrap{position:relative;border:1px solid var(--line-strong);border-radius:14px;overflow:hidden;box-shadow:var(--shadow);background:var(--paper-2)}
+  #trip-map{height:560px;width:100%;background:var(--paper-2)}
+  #trip-map .leaflet-control-attribution{font-family:"Newsreader",serif;font-size:.7rem;background:rgba(243,236,224,.9)}
+  .map-legend{display:flex;flex-wrap:wrap;gap:14px 22px;margin-top:18px;padding:14px 18px;background:var(--paper-2);border:1px solid var(--line);border-radius:10px;font-size:.86rem;color:var(--ink-soft);align-items:center}
+  .map-legend .leg{display:inline-flex;align-items:center;gap:8px;font-family:"Newsreader",serif}
+  .map-legend .dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--paper);box-shadow:0 0 0 1px rgba(34,40,30,.35)}
+  /* map category palette — chosen for clear hue separation on the paper background:
+     stay=deep blue · nature=vivid green · culture=plum · folk=honey gold · drive=brick red */
+  .map-legend .dot.stay{background:#1f4f7a}
+  .map-legend .dot.nature{background:#3f8b3a}
+  .map-legend .dot.culture{background:#8a3d7a}
+  .map-legend .dot.folk{background:#d19c2e}
+  .map-legend .dot.drive{background:#c4452a}
+  .map-legend .leg b{font-family:"Fraunces",serif;font-weight:500;color:var(--ink);margin-right:2px}
+  .map-pin{display:flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;color:#fff;font-family:"Fraunces",serif;font-weight:600;font-size:.78rem;line-height:1;border:2px solid var(--paper);box-shadow:0 2px 6px rgba(34,40,30,.4)}
+  .map-pin.stay{background:#1f4f7a;width:30px;height:30px;font-size:.82rem}
+  .map-pin.nature{background:#3f8b3a}
+  .map-pin.culture{background:#8a3d7a}
+  .map-pin.folk{background:#d19c2e}
+  .map-pin.drive{background:#c4452a}
+  .leaflet-popup-content-wrapper{background:var(--paper);border:1px solid var(--line-strong);border-radius:10px;box-shadow:var(--shadow);color:var(--ink)}
+  .leaflet-popup-tip{background:var(--paper);border:1px solid var(--line-strong)}
+  .leaflet-popup-content{margin:12px 14px;font-family:"Newsreader",serif;font-size:.92rem;line-height:1.45}
+  .leaflet-popup-content b{font-family:"Fraunces",serif;font-weight:500;color:var(--ink);display:block;margin-bottom:2px;font-size:1rem}
+  .leaflet-popup-content .pop-meta{font-family:"Fraunces",serif;font-size:.66rem;letter-spacing:.18em;text-transform:uppercase;color:#3f8b3a;margin-bottom:5px;font-weight:600}
+  .leaflet-popup-content .pop-meta.stay{color:#1f4f7a}
+  .leaflet-popup-content .pop-meta.culture{color:#8a3d7a}
+  .leaflet-popup-content .pop-meta.drive{color:#c4452a}
+  .leaflet-popup-content .pop-meta.folk{color:#b07f1f}
+
+  /* ---- rates / accommodation table ---- */
+  .rate-group{margin-bottom:34px}
+  .rate-group:last-child{margin-bottom:0}
+  .rate-group > .where{font-family:"Fraunces",serif;font-size:.82rem;letter-spacing:.04em;color:var(--moss);font-weight:500;margin-bottom:14px;display:flex;align-items:center;gap:12px}
+  .rate-group > .where::after{content:"";flex:1;height:1px;background:var(--line)}
+  .rate-list{display:flex;flex-direction:column;gap:12px}
+  .rate{display:grid;grid-template-columns:1.5fr 1fr auto;gap:18px;align-items:flex-start;background:var(--paper-2);border:1px solid var(--line);border-radius:11px;padding:16px 20px;box-shadow:var(--shadow)}
+  .rate.pick{border-color:var(--moss);border-left:3px solid var(--moss)}
+  .rate .r-name{font-family:"Fraunces",serif;font-weight:500;font-size:1.06rem;color:var(--ink);margin-bottom:3px;display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
+  .rate .r-name .r-tag{font-family:"Fraunces",serif;font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;font-weight:500;padding:.18em .58em;border-radius:100px;color:var(--moss);border:1px solid rgba(79,91,60,.32)}
+  .rate .r-name .r-tag.alt{color:var(--ink-faint);border-color:var(--line)}
+  .rate .r-desc{font-size:.9rem;color:var(--ink-soft);line-height:1.5}
+  .rate .r-loc{font-size:.86rem;color:var(--ink-soft);font-style:italic}
+  .rate .r-loc b{font-style:normal;color:var(--ink);font-family:"Fraunces",serif;font-weight:500;display:block;margin-bottom:2px}
+  .rate .r-price{font-family:"Fraunces",serif;color:var(--ink);font-weight:500;font-size:1.04rem;text-align:right;white-space:nowrap;padding-top:2px}
+  .rate .r-price small{display:block;font-family:"Newsreader",serif;font-weight:400;font-style:italic;color:var(--ink-faint);font-size:.78rem;margin-top:3px}
+  .rate-note{margin-top:18px;font-size:.86rem;color:var(--ink-faint);font-style:italic;line-height:1.55}
+  .rate-note b{font-style:normal;color:var(--ink-soft)}
+
+  /* ---- hotel shortlist table ---- */
+  .hotel-table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);background:var(--paper-2);margin-top:6px;-webkit-overflow-scrolling:touch}
+  .hotel-table{width:100%;border-collapse:collapse;font-size:.92rem;min-width:780px}
+  .hotel-table thead th{background:var(--paper-3);font-family:"Fraunces",serif;font-weight:500;font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:var(--moss-deep);text-align:left;padding:14px 16px;border-bottom:1px solid var(--line-strong);white-space:nowrap;vertical-align:bottom}
+  .hotel-table tbody td{padding:14px 16px;border-bottom:1px solid var(--line);color:var(--ink-soft);vertical-align:top;line-height:1.5}
+  .hotel-table tbody tr:last-child td{border-bottom:none}
+  .hotel-table tbody tr:hover{background:rgba(255,251,242,.55)}
+  .hotel-table .h-name{font-family:"Fraunces",serif;font-weight:500;color:var(--ink);font-size:1rem;display:block;margin-bottom:2px;letter-spacing:-.005em}
+  .hotel-table .h-name a{color:inherit;text-decoration:none;border-bottom:1px solid var(--line-strong);transition:border-color .15s ease, color .15s ease;padding-bottom:1px}
+  .hotel-table .h-name a:hover{color:var(--moss-deep);border-bottom-color:var(--moss-deep)}
+  .hotel-table .h-name a:focus-visible{outline:2px solid var(--moss);outline-offset:2px;border-radius:2px}
+  .hotel-table .h-loc{font-size:.82rem;color:var(--ink-faint);font-style:italic}
+  .hotel-table .h-rate{font-family:"Fraunces",serif;color:var(--ink);font-weight:500;white-space:nowrap}
+  .hotel-table .h-rate small{display:block;font-family:"Newsreader",serif;font-weight:400;font-style:italic;color:var(--ink-faint);font-size:.74rem;margin-top:2px}
+  .hotel-table .ftag{display:inline-block;font-family:"Fraunces",serif;font-size:.6rem;letter-spacing:.16em;text-transform:uppercase;color:var(--moss);background:rgba(79,91,60,.10);border:1px solid rgba(79,91,60,.28);border-radius:100px;padding:.22em .6em;margin:0 4px 4px 0;font-weight:500;line-height:1.2}
+  .hotel-table .ftag.spa{color:#8a3d7a;background:rgba(138,61,122,.10);border-color:rgba(138,61,122,.3)}
+  .hotel-table .ftag.pool{color:#1f4f7a;background:rgba(31,79,122,.10);border-color:rgba(31,79,122,.3)}
+  .hotel-table .ftag.tub{color:#c4452a;background:rgba(196,69,42,.10);border-color:rgba(196,69,42,.3)}
+  .hotel-table .ftag.gold{color:#b07f1f;background:rgba(209,156,46,.12);border-color:rgba(209,156,46,.36)}
+  .hotel-table .h-bk{font-family:"Fraunces",serif;font-weight:500;font-size:.86rem;white-space:nowrap}
+  .hotel-table .h-bk.yes{color:#3f8b3a}
+  .hotel-table .h-bk.no{color:var(--ink-faint);font-weight:400;font-style:italic}
+  .hotel-table .h-bk.varies{color:var(--rust);font-style:italic;font-weight:400}
+  .hotel-table tr.starred td{background:rgba(209,156,46,.10)}
+  .hotel-table tr.starred td:first-child{border-left:3px solid #d19c2e}
+  .hotel-table tr.starred:hover td{background:rgba(209,156,46,.14)}
+  .hotel-table .star{color:#d19c2e;margin-right:4px;font-size:1.05em}
+  .table-foot{margin-top:14px;font-size:.84rem;color:var(--ink-faint);font-style:italic;line-height:1.55}
+  .table-foot b{font-style:normal;color:var(--ink-soft);font-family:"Fraunces",serif;font-weight:500}
+
+  /* ---- famous villages ---- */
+  .villages{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:6px}
+  .village{background:var(--paper-2);border:1px solid var(--line);border-radius:11px;padding:18px 20px 16px;position:relative;overflow:hidden;box-shadow:var(--shadow)}
+  .village::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--moss)}
+  .village.south::before{background:var(--heather)}
+  .village.north::before{background:var(--slate)}
+  .village.west::before{background:var(--rust)}
+  .village .vname{font-family:"Fraunces",serif;font-size:1.12rem;font-weight:500;letter-spacing:-.005em;color:var(--ink);display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:5px}
+  .village .vname .vtag{font-family:"Fraunces",serif;font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-faint);font-weight:500;padding:.16em .55em;border:1px solid var(--line);border-radius:100px}
+  .village.south .vname .vtag{color:var(--heather);border-color:rgba(122,90,120,.34)}
+  .village.north .vname .vtag{color:var(--slate);border-color:rgba(82,102,108,.34)}
+  .village.west .vname .vtag{color:var(--rust);border-color:rgba(168,90,54,.34)}
+  .village p{font-size:.93rem;color:var(--ink-soft);line-height:1.55}
+  .village .vmark{display:inline-block;font-family:"Fraunces",serif;font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--moss);margin-top:8px;font-style:italic}
+  .village.south .vmark{color:var(--heather)}
+  .village.north .vmark{color:var(--slate)}
+  .village.west .vmark{color:var(--rust)}
+
+  footer{border-top:1px solid var(--line);padding:40px 0 70px;text-align:center;color:var(--ink-faint);font-size:.86rem}
+  footer .mark{font-family:"Fraunces",serif;font-style:italic;font-size:1.15rem;color:var(--moss);margin-bottom:6px}
+
+  a{color:var(--moss-deep);text-decoration:underline;text-underline-offset:2px;text-decoration-thickness:1px}
+
+  /* ---- entrance animation ---- */
+  .reveal{opacity:0;transform:translateY(16px);animation:rise .9s cubic-bezier(.2,.7,.2,1) forwards}
+  @keyframes rise{to{opacity:1;transform:none}}
+  .hero .kicker{animation-delay:.05s}.hero h1{animation-delay:.12s}.hero .sub{animation-delay:.22s}
+  .hero-meta{animation-delay:.32s}.lede{animation-delay:.42s}
+
+  @media (max-width:680px){
+    body{font-size:17px}
+    .wrap{padding:0 20px}
+    header.hero{padding:80px 0 50px}
+    .why,.twocol,.book-grid,.stay-grid,.villages{grid-template-columns:1fr}
+    .rate{grid-template-columns:1fr;gap:8px}
+    .rate .r-price{text-align:left}
+    .day{grid-template-columns:1fr;gap:18px}
+    .day-index{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap}
+    .day-index .base{border-top:none;padding-top:0;flex-basis:100%}
+    .events .ev{grid-template-columns:1fr;gap:4px}
+    #trip-map{height:440px}
+    .map-legend{gap:10px 14px;font-size:.8rem}
+  }
+  @media print{
+    .contours{display:none}
+    body{background:#fff;font-size:12pt}
+    .chip,.why-card,.panel,.book,.note{box-shadow:none}
+    .day{break-inside:avoid}
+    section{padding:24px 0}
+    #trip-map{height:340px}
+  }
+</style>
+</head>
+<body>
+
+<div class="contours" aria-hidden="true">
+  <svg class="c1" viewBox="0 0 400 400" fill="none" stroke="currentColor" stroke-width="1.2">
+    <path d="M200 60c70 0 120 50 120 120s-60 150-130 150S70 280 70 190 130 60 200 60Z"/>
+    <path d="M200 95c55 0 95 40 95 95s-48 118-103 118S100 270 100 185 145 95 200 95Z"/>
+    <path d="M200 130c40 0 70 30 70 70s-36 86-76 86-64-50-64-110 30-46 70-46Z"/>
+    <path d="M198 165c26 0 44 20 44 46s-24 56-50 56-40-34-40-72 20-30 46-30Z"/>
+  </svg>
+  <svg class="c2" viewBox="0 0 400 400" fill="none" stroke="currentColor" stroke-width="1.2">
+    <path d="M210 50c80 0 130 60 130 140s-70 160-150 160S60 300 60 200 130 50 210 50Z"/>
+    <path d="M205 100c55 0 95 45 95 100s-50 120-108 120S95 280 95 195 150 100 205 100Z"/>
+    <path d="M205 150c34 0 58 28 58 64s-32 78-68 78-52-44-52-86 28-56 62-56Z"/>
+  </svg>
+</div>
+
+<main>
+  <header class="hero">
+    <div class="wrap">
+      <div class="kicker reveal">
+        <span class="rule"></span>
+        <span class="eyebrow">A trip for two · Cumbria, England</span>
+      </div>
+      <h1 class="reveal">The <em>Lake</em><br>District</h1>
+      <p class="sub reveal">Nine slow days, north to south &mdash; nature, quiet, folklore, literature and a little culture.</p>
+      <div class="hero-meta reveal">
+        <span class="chip"><b>19&ndash;27 June 2026</b></span>
+        <span class="chip">Fri &rarr; Sat · <b>9 days</b></span>
+        <span class="chip"><b>Drive:</b> Wembley &rarr; Manchester &rarr; Lakes</span>
+        <span class="chip"><b>3 stays:</b> Manchester · Ullswater · Coniston</span>
+      </div>
+      <p class="lede reveal">A scenery-first loop built around your priorities: long, restful days in the <strong>quietest corners</strong> of the park, intimate stays well off the main roads, and just enough <strong>poetry, prose and ancient stone</strong> to feed the soul. You break the Wembley&ndash;Lakes drive with a Manchester overnight, settle in for solstice eve, and have the <strong>summer solstice</strong> on Sunday. The extra Friday gives you Beatrix Potter and Coniston Water at a slower pace, and the trip closes on the <strong>Festival of the Lake</strong> at Windermere Jetty before the long drive home.</p>
+    </div>
+  </header>
+
+  <!-- WHY THIS SHAPE -->
+  <section>
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="sec-num">01</span>
+        <h2>Why the trip is shaped this way</h2>
+      </div>
+      <div class="why">
+        <div class="why-card">
+          <h3>Quietly perfect timing</h3>
+          <p>English schools don&rsquo;t break up until mid-to-late July, so late June is a genuine sweet spot &mdash; long days (sunset near 9:40pm), early-summer greenery, and far fewer families than peak season.</p>
+        </div>
+        <div class="why-card">
+          <h3>A solstice opening</h3>
+          <p>The Saturday-into-Lakes arrival sets up a proper solstice on Sunday 21 June &mdash; an ancient stone circle for a long late-afternoon-to-sunset visit on the longest evening. A mystical, healing note to open with.</p>
+        </div>
+        <div class="why-card">
+          <h3>Break the drive in Manchester</h3>
+          <p>Wembley to the Lakes in one go is ~5.5 hours. An overnight in Manchester city centre on the Friday turns the drive into two relaxed halves, with an evening to enjoy the city &mdash; food, a walk, a slow start the next morning.</p>
+        </div>
+        <div class="why-card">
+          <h3>North &rarr; south flow</h3>
+          <p>You begin on a calm, romantic lake and finish nearer Windermere &mdash; which shortens the final drive home south, and lets the Wordsworth, bookshops and Beatrix Potter country fall naturally in the back half.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MAP -->
+  <section>
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="sec-num">02</span>
+        <h2>The route, at a glance</h2>
+      </div>
+      <p class="lede" style="margin-top:0;margin-bottom:26px">Manchester stopover, both Lakes bases, the mountain passes, the folklore spots and the literary corners &mdash; bookshops, schoolrooms and poets&rsquo; houses, all mapped. Click a pin for the day, the timing, and a sentence on why it&rsquo;s there. Numbered by trip day; colour by kind of place.</p>
+      <div class="map-wrap">
+        <div id="trip-map" role="img" aria-label="Map of all itinerary stops across the Lake District"></div>
+      </div>
+      <div class="map-legend">
+        <span class="leg"><span class="dot stay"></span><b>Stays</b> (your two bases)</span>
+        <span class="leg"><span class="dot nature"></span><b>Nature</b> (lakes, falls, tarns)</span>
+        <span class="leg"><span class="dot culture"></span><b>Culture</b> (houses, museums, art)</span>
+        <span class="leg"><span class="dot folk"></span><b>Folklore</b> (stones, festivals)</span>
+        <span class="leg"><span class="dot drive"></span><b>Drive</b> (airport, passes)</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ITINERARY -->
+  <section>
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="sec-num">03</span>
+        <h2>The day by day</h2>
+      </div>
+
+      <!-- DAY 1 -->
+      <div class="day">
+        <div class="day-index">
+          <div class="n">1</div>
+          <div class="dow">Friday</div>
+          <div class="date">19 June</div>
+          <div class="base"><b>Manchester</b>City overnight</div>
+        </div>
+        <div class="day-body">
+          <h3>Wembley &rarr; Manchester</h3>
+          <p class="day-narr">Break the long drive in two: a relaxed afternoon north, a Manchester dinner, and an unhurried morning before the final stretch.</p>
+          <div class="tags"><span class="tag drive">Travel</span><span class="tag culture">City evening</span></div>
+          <div class="stop rest">
+            <div class="time">Late morning</div>
+            <div class="name">Wembley &rarr; Manchester</div>
+            <p>~4h on the M1 / M6 if you leave by mid-morning &mdash; aim to arrive between 3 and 5pm. Charge points and a long lunch around Stafford or Sandbach split the drive nicely.</p>
+          </div>
+          <div class="stop">
+            <div class="time">Evening</div>
+            <div class="name">Manchester &mdash; Northern Quarter or Spinningfields</div>
+            <p>Drop the bags, leave the car, and walk. The <b>Northern Quarter</b> (Stevenson Square, Tib Street) has independent bars and tiny restaurants; <b>Spinningfields</b> is the polished, riverside alternative. A pre-trip dinner here is a treat, not a chore.</p>
+          </div>
+          <div class="food">
+            <div class="lab">Table for two</div>
+            <div class="row"><span class="k">dinner</span><span><b>Mana</b> (Ancoats) &mdash; Manchester&rsquo;s Michelin star, tasting-menu only; book well ahead. Or <b>El Gato Negro</b>, King Street &mdash; lively Spanish tapas with a roof terrace.</span></div>
+            <div class="row"><span class="k">relaxed</span><span><b>Cottonopolis</b>, Newton Street &mdash; Japanese izakaya-style small plates in the Northern Quarter.</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DAY 2 -->
+      <div class="day">
+        <div class="day-index">
+          <div class="n">2</div>
+          <div class="dow">Saturday</div>
+          <div class="date">20 June</div>
+          <div class="base"><b>Ullswater</b>Check in · nights 2&ndash;5</div>
+        </div>
+        <div class="day-body">
+          <h3>Manchester &rarr; the Lakes</h3>
+          <p class="day-narr">A slow Manchester morning, then the short hop north into Lakeland; settle in for solstice eve by the water.</p>
+          <div class="tags"><span class="tag drive">Travel</span><span class="tag nature">Scenery</span><span class="tag relax">Settle in</span></div>
+          <div class="stop">
+            <div class="time">Morning</div>
+            <div class="name">Slow Manchester start</div>
+            <p>Breakfast somewhere good (<b>Federal</b> for coffee and brunch, or <b>Pollen Bakery</b> by the canal), then on the road by 11. The drive north is only ~1h45 &mdash; no rush.</p>
+          </div>
+          <div class="stop rest">
+            <div class="time">Afternoon</div>
+            <div class="name">Manchester &rarr; Patterdale</div>
+            <p>M6 north to Penrith, then the A592 down to Pooley Bridge and along Ullswater. Check into Deepdale Hall and decompress &mdash; the Saturday arrival is the gift: no rushing, no plan.</p>
+          </div>
+          <div class="stop">
+            <div class="time">Late evening</div>
+            <div class="name">Solstice eve by the lake</div>
+            <p>Sunset on 20 June is at ~9:39pm, almost as late as the solstice itself. A walk along the Patterdale shore at dusk, or a glass of wine on the hut deck, is the right opening note. Save Castlerigg for tomorrow.</p>
+          </div>
+          <div class="food">
+            <div class="lab">Table for two</div>
+            <div class="row"><span class="k">dinner</span><span><b>1863, Pooley Bridge</b> &mdash; an acclaimed restaurant-with-rooms; the tasting menu is a special first night. <i>(Open Sat eve; closed Tue &amp; Wed &mdash; book ahead.)</i></span></div>
+            <div class="row"><span class="k">relaxed</span><span><b>The Secret Garden</b>, Pooley Bridge &mdash; riverside, casual, walk in through the village shop.</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DAY 3 -->
+      <div class="day">
+        <div class="day-index">
+          <div class="n">3</div>
+          <div class="dow">Sunday</div>
+          <div class="date">21 June</div>
+          <div class="base"><b>Ullswater</b>Solstice day</div>
+        </div>
+        <div class="day-body">
+          <h3>Summer Solstice &amp; Keswick&rsquo;s Poets</h3>
+          <p class="day-narr">A slow lake morning, a short Keswick literary stroll, and a long late-afternoon-into-sunset at the stone circle &mdash; a few hours rather than a vigil.</p>
+          <div class="tags"><span class="tag culture">Folklore</span><span class="tag culture">Literature</span><span class="tag relax">Slow</span></div>
+          <div class="stop">
+            <div class="time">Late morning</div>
+            <div class="name">A slow Ullswater morning</div>
+            <p>Long breakfast and an unhurried potter &mdash; the lakeshore from Patterdale toward Side Farm, or a flat stretch of the Ullswater Way. The solstice rewards stillness more than ticking off sights.</p>
+          </div>
+          <div class="stop cult">
+            <div class="time">3:00pm</div>
+            <div class="name">Greta Hall &amp; a Keswick literary stroll</div>
+            <p>Drive ~40 min to Keswick. <b>Greta Hall</b> was Coleridge&rsquo;s home (1800&ndash;03) and Robert Southey&rsquo;s for forty years &mdash; Wordsworth, Hazlitt, Keats, Shelley, Lord Byron, Scott and De Quincey all visited. It&rsquo;s self-catering accommodation now (no public tours) but you can see it from Chestnut Hill and walk down to the river. Pair it with a wander past the <b>Theatre by the Lake</b> and along the Derwentwater shore.</p>
+            <span class="hours">Greta Hall exterior only · Keswick has free street parking on Sun</span>
+          </div>
+          <div class="stop cult">
+            <div class="time">6:30pm &rarr; ~9:40pm</div>
+            <div class="name">Castlerigg Stone Circle &mdash; solstice sunset</div>
+            <p>The headline. A 5,000-year-old ring of 38 stones cradled by fells, 10 min east of Keswick. Arrive a few hours before sunset (21:40) for the long golden light, stand in the centre and turn a slow circle as the fells purple. A small, gentle gathering of locals, walkers and Druid Network members tends to form &mdash; quiet, never crowded. Free, no booking. Back at base by 10:30pm.</p>
+            <span class="hours">Open 24 hours · free · small free car park · bring layers + a thermos</span>
+          </div>
+          <div class="food">
+            <div class="lab">Table for two</div>
+            <div class="row"><span class="k">lunch</span><span><b>Fellbites Caf&eacute;</b>, Glenridding &mdash; honest, hearty plates close to base.</span></div>
+            <div class="row"><span class="k">tea</span><span><b>Bryson&rsquo;s of Keswick</b> &mdash; classic Cumbrian bakery and tearoom; grab a sandwich or scone before Castlerigg.</span></div>
+            <div class="row"><span class="k">late dinner</span><span><b>The Brackenrigg Inn</b>, Watermillock &mdash; back on the way home; Sunday roast holds well, and the lake view at 10pm in June is something else.</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DAY 4 -->
+      <div class="day">
+        <div class="day-index">
+          <div class="n">4</div>
+          <div class="dow">Monday</div>
+          <div class="date">22 June</div>
+          <div class="base"><b>Ullswater</b>Day around the lake</div>
+        </div>
+        <div class="day-body">
+          <h3>Slow Ullswater</h3>
+          <p class="day-narr">A gentle day: a wooded waterfall, a heritage steamer, and a spa afternoon.</p>
+          <div class="tags"><span class="tag nature">Nature</span><span class="tag relax">Relax</span></div>
+          <div class="stop">
+            <div class="time">10:00am</div>
+            <div class="name">Aira Force</div>
+            <p>A series of waterfalls tumbling through a wooded gorge; the lower loop is short and easy. Add the <b>Gowbarrow</b> path for one of the great panoramas over Ullswater.</p>
+            <span class="hours">Open access · NT car park £5.50/2hr, £7/4hr</span>
+          </div>
+          <div class="stop">
+            <div class="time">1:00pm</div>
+            <div class="name">Ullswater &lsquo;Steamers&rsquo;</div>
+            <p>Glide between Glenridding, Howtown and Pooley Bridge on the historic boats. Ride one way and walk a stretch of the lakeshore path back if you fancy stretching your legs.</p>
+            <span class="hours">Sailings ~9&ndash;5 · ~£24 return · own car park £6/3hr</span>
+          </div>
+          <div class="stop rest">
+            <div class="time">Late afternoon</div>
+            <div class="name">Spa &amp; dinner at Another Place</div>
+            <p>The lake-view spa and restaurant are open to non-residents &mdash; a perfect healing-trip wind-down. Their shepherd&rsquo;s huts are also a dreamy place to actually stay (see below).</p>
+            <span class="hours warn">Book the spa &amp; dinner ahead</span>
+          </div>
+          <div class="food">
+            <div class="lab">Table for two</div>
+            <div class="row"><span class="k">lunch</span><span><b>Granny Dowbekins</b>, Pooley Bridge &mdash; lakeside terrace with heat lamps, hearty plates after your walk.</span></div>
+            <div class="row"><span class="k">dinner</span><span><b>Rampsbeck at Another Place</b> &mdash; lake-view dining where you&rsquo;re already booked for the spa.</span></div>
+            <div class="row"><span class="k">variety</span><span><b>Villa Bianca</b>, Penrith &mdash; Sardinian-run trattoria for an Italian break from gastropub fare, ~25 min east.</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DAY 5 -->
+      <div class="day">
+        <div class="day-index">
+          <div class="n">5</div>
+          <div class="dow">Tuesday</div>
+          <div class="date">23 June</div>
+          <div class="base"><b>Ullswater</b>Day trip west</div>
+        </div>
+        <div class="day-body">
+          <h3>Buttermere &amp; the High Passes</h3>
+          <p class="day-narr">The wild, quiet west &mdash; a driving day, with feet only briefly on the ground.</p>
+          <div class="tags"><span class="tag drive">Scenic drive</span><span class="tag nature">Nature</span></div>
+          <div class="stop">
+            <div class="time">Late morning</div>
+            <div class="name">Honister Pass &mdash; the climb</div>
+            <p>Cross dramatic <b>Honister Pass</b>, the most cinematic road in the park. Pull in at the slate mine viewpoint at the top for the views; back in the car within 10 minutes.</p>
+          </div>
+          <div class="stop">
+            <div class="time">~12:30pm</div>
+            <div class="name">Buttermere &mdash; lakeshore taster (not the loop)</div>
+            <p>Park at the village, then a gentle <b>~15-minute walk</b> through the field gate down to the lake&rsquo;s edge and back. That single view across to High Stile &mdash; with cattle in the foreground, mountains all around &mdash; is the picture you came for. Skip the full 4.5-mile circular; it&rsquo;s lovely, but you&rsquo;ve seen the best bit in fifteen minutes.</p>
+            <span class="hours">Village car parks fill by late morning · arrive before 12 if possible</span>
+          </div>
+          <div class="stop rest">
+            <div class="time">Afternoon</div>
+            <div class="name">Newlands or Borrowdale &mdash; the long way home</div>
+            <p>Return via <b>Newlands Pass</b> (narrower, even quieter, drops you toward Keswick) or back over Honister and through <b>Borrowdale</b> &mdash; lush valley floor and the wooded shores of Derwentwater. Either is a slow, view-soaked drive; do it with the windows down.</p>
+          </div>
+          <div class="food">
+            <div class="lab">Table for two</div>
+            <div class="row"><span class="k">lunch</span><span><b>Syke Farm Tea Room</b>, Buttermere &mdash; homemade soups, cakes, and the farm&rsquo;s legendary ice cream. Right by where you park.</span></div>
+            <div class="row"><span class="k">dinner</span><span><b>The Buttermere Court Hotel</b> for an early bite, or back near base.</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DAY 6 -->
+      <div class="day">
+        <div class="day-index">
+          <div class="n">6</div>
+          <div class="dow">Wednesday</div>
+          <div class="date">24 June</div>
+          <div class="base"><b>Coniston</b>Move · nights 6&ndash;8</div>
+        </div>
+        <div class="day-body">
+          <h3>Cross to the South</h3>
+          <p class="day-narr">Over the highest pass in the Lakes, then Beatrix Potter&rsquo;s farmhouse, a Victorian visionary above the water and a quiet evening checking in.</p>
+          <div class="tags"><span class="tag drive">Mountain pass</span><span class="tag culture">Beatrix Potter</span><span class="tag culture">Literature</span><span class="tag culture">Ruskin</span></div>
+          <div class="stop">
+            <div class="time">Morning</div>
+            <div class="name">Kirkstone Pass &rarr; Coniston</div>
+            <p>The drive over Kirkstone, the highest road pass in the national park, is properly cinematic. Take it slowly and drink in the descent toward the southern lakes.</p>
+          </div>
+          <div class="stop cult">
+            <div class="time">1:00pm</div>
+            <div class="name">Hill Top &mdash; Beatrix Potter&rsquo;s farmhouse</div>
+            <p>Near Sawrey, ten minutes from base. The tiny 17th-century farmhouse Beatrix Potter bought in 1905 with the royalties from <i>Peter Rabbit</i>, kept exactly as she left it &mdash; her chairs, her watercolours, the cottage garden she drew straight into the books. Rooms are small; timed entry only; <b>closed Fridays in term time</b>, so Wednesday is the day for it.</p>
+            <span class="hours warn">Timed entry · pre-book online · NT members free</span>
+          </div>
+          <div class="stop cult">
+            <div class="time">3:30pm</div>
+            <div class="name">Brantwood &mdash; John Ruskin&rsquo;s house</div>
+            <p>The hillside home of the thinker and artist John Ruskin, with terraced gardens and sweeping views across Coniston Water. A lovely café and a genuinely calm couple of hours.</p>
+            <span class="hours">Open daily 10:30am&ndash;4:00pm · single-track lane in</span>
+          </div>
+          <div class="stop cult">
+            <div class="time">~5:30pm</div>
+            <div class="name">Tabitha Twitchit&rsquo;s Bookshop, Hawkshead</div>
+            <p>A new second-hand bookshop (opened 2025, National Trust-run) in the 17th-century stone building that used to house the Beatrix Potter Gallery &mdash; gifted to the Trust by Potter&rsquo;s husband, the village solicitor William Heelis. Cosy nooks, a children&rsquo;s corner, and the lovely lore of the name on the door. A perfect arrival-into-village mooch before checking in.</p>
+            <span class="hours">Open daily in season · National Trust members free</span>
+          </div>
+          <div class="stop rest">
+            <div class="time">Evening</div>
+            <div class="name">Settle into Lakes Lodges</div>
+            <p>Check into your lodge on Hawkshead Hill &mdash; quieter than the village itself, ten minutes to dinner. Hot tub on the deck and the long-day light running till past 9:30pm.</p>
+          </div>
+          <div class="food">
+            <div class="lab">Table for two</div>
+            <div class="row"><span class="k">dinner</span><span><b>The Drunken Duck Inn</b>, Barngates &mdash; one of the Lakes&rsquo; best gastropubs, gloriously remote up a hill lane. <i>Book ahead.</i></span></div>
+            <div class="row"><span class="k">or</span><span><b>Steam Coniston</b> &mdash; a relaxed, inventive small-plates bistro <i>(Wed&ndash;Sun evenings).</i></span></div>
+            <div class="row"><span class="k">variety</span><span><b>Enzo&rsquo;s</b>, Coniston &mdash; wood-fired pizzas from an oven shipped from Italy; casual, lively, an easy arrival-night swap.</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DAY 7 -->
+      <div class="day">
+        <div class="day-index">
+          <div class="n">7</div>
+          <div class="dow">Thursday</div>
+          <div class="date">25 June</div>
+          <div class="base"><b>Coniston</b>Day around the south</div>
+        </div>
+        <div class="day-body">
+          <h3>Wordsworth, Bookshops &amp; Woodland</h3>
+          <p class="day-narr">The literary heart of the trip &mdash; from Wordsworth as a schoolboy to Wordsworth as a poet, by way of two of England&rsquo;s loveliest independent bookshops &mdash; closing on a serene upland tarn at golden hour.</p>
+          <div class="tags"><span class="tag culture">Literature</span><span class="tag culture">Bookshops</span><span class="tag nature">Gentle walks</span></div>
+          <div class="stop cult">
+            <div class="time">10:00am</div>
+            <div class="name">Hawkshead Grammar School Museum</div>
+            <p>Five minutes from base. The unchanged 16th-century schoolroom where <b>William Wordsworth</b> studied from age 9 to 17 &mdash; his initials carved into one of the desks. The headmaster who introduced him to poetry was William Taylor, buried in the churchyard above. A small, beautifully preserved museum and a quiet pilgrimage.</p>
+            <span class="hours warn">Open daily during school holidays · closed Tue &amp; Wed in term time (so Thu is good)</span>
+          </div>
+          <div class="stop cult">
+            <div class="time">11:30am</div>
+            <div class="name">Dove Cottage &amp; Wordsworth Grasmere</div>
+            <p>Drive ~25 min to Grasmere. Wordsworth&rsquo;s adult home and an excellent museum &mdash; the cottage rooms still smell of woodsmoke. Pair it with Sarah Nelson&rsquo;s gingerbread and the poet&rsquo;s grave in St Oswald&rsquo;s churchyard.</p>
+            <span class="hours warn">Open Tue&ndash;Sat 10&ndash;4 (closed Sun &amp; Mon) · book the house tour</span>
+          </div>
+          <div class="stop cult">
+            <div class="time">1:30pm</div>
+            <div class="name">Sam Read Bookseller, Grasmere</div>
+            <p>One of England&rsquo;s oldest independent bookshops &mdash; trading since <b>1887</b>, only seven owners in its history, opposite St Oswald&rsquo;s. A tiny treasure of poetry, nature writing and Lakeland history. Plenty of titles you won&rsquo;t find on the high street.</p>
+            <span class="hours">Open daily · small, browse slowly</span>
+          </div>
+          <div class="stop cult">
+            <div class="time">2:30pm</div>
+            <div class="name">Rydal Mount &amp; Rydal Water</div>
+            <p>Wordsworth&rsquo;s later home, with gardens he designed himself. Follow with an easy stroll by Rydal Water (and Rydal Cave, if you&rsquo;re tempted).</p>
+            <span class="hours">Open daily in season · check current times</span>
+          </div>
+          <div class="stop cult">
+            <div class="time">4:00pm</div>
+            <div class="name">Fred Holdsworth&rsquo;s Bookshop, Ambleside</div>
+            <p>Open since 1956 in Central Buildings, Ambleside &mdash; an old-school indie where the founder (now retired) still pops in. A warm, brown-paper-package kind of place: tea, conversation, and titles you didn&rsquo;t know you wanted. A perfect coffee-and-browse counterweight to Sam Read.</p>
+            <span class="hours">Open Mon&ndash;Sat · closed Sun</span>
+          </div>
+          <div class="stop">
+            <div class="time">6:00pm</div>
+            <div class="name">Tarn Hows</div>
+            <p>A jewel of an upland tarn with a flat circular path &mdash; pure golden-hour magic, and the perfect quiet end to the day.</p>
+            <span class="hours">Open access · narrow access road · NT parking</span>
+          </div>
+          <div class="food">
+            <div class="lab">Table for two</div>
+            <div class="row"><span class="k">lunch</span><span><b>Sarah Nelson&rsquo;s Grasmere Gingerbread</b> for the famous bite, plus <b>Zeffirellis café</b> in Ambleside for a proper sit-down (Italian café inside an indie cinema).</span></div>
+            <div class="row"><span class="k">dinner</span><span><b>The Jumble Room</b>, Grasmere &mdash; quirky, candle-lit and much-loved, with a globe-trotting menu. <i>(Wed&ndash;Sat &mdash; book ahead.)</i></span></div>
+            <div class="row"><span class="k">variety</span><span><b>Doi Intanon</b>, Ambleside &mdash; the Lakes&rsquo; most-loved Thai (20+ years, no MSG); pad thai, sea-bass special, properly-spiced curries. <i>Book ahead.</i></span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DAY 8 -->
+      <div class="day">
+        <div class="day-index">
+          <div class="n">8</div>
+          <div class="dow">Friday</div>
+          <div class="date">26 June</div>
+          <div class="base"><b>Coniston</b>Last full day</div>
+        </div>
+        <div class="day-body">
+          <h3>Coniston Water &amp; Cartmel</h3>
+          <p class="day-narr">A breath-out day &mdash; a heritage steam yacht across the lake of <i>Swallows and Amazons</i>, a tiny priory village south of the park, and a slow evening back at base.</p>
+          <div class="tags"><span class="tag culture">Arthur Ransome</span><span class="tag nature">Lake</span><span class="tag relax">Slow</span></div>
+          <div class="stop">
+            <div class="time">11:00am</div>
+            <div class="name">Steam Yacht <i>Gondola</i>, Coniston Pier</div>
+            <p>The National Trust&rsquo;s restored Victorian steam yacht, gliding silently down Coniston Water. Sit out on deck. The route passes <b>Peel Island</b> &mdash; Arthur Ransome&rsquo;s &ldquo;Wild Cat Island&rdquo; from <i>Swallows and Amazons</i> &mdash; and Ruskin&rsquo;s Brantwood on the opposite shore. A 50-minute cruise; book ahead.</p>
+            <span class="hours warn">Sailings ~Apr&ndash;Oct · pre-book online · weather-dependent</span>
+          </div>
+          <div class="stop">
+            <div class="time">1:30pm</div>
+            <div class="name">Cartmel village</div>
+            <p>Just outside the park&rsquo;s southern edge, ~40 min from base. A picture-perfect Cumbrian village built around its <b>12th-century priory</b> (free, soaring nave, stunningly carved misericords). Cartmel is also the <b>birthplace of sticky toffee pudding</b> &mdash; the Cartmel Village Shop has been selling it since 1984, and you should not leave without one.</p>
+          </div>
+          <div class="stop rest">
+            <div class="time">Evening</div>
+            <div class="name">Hot tub, hut deck, long light</div>
+            <p>Back to base by 5:30. With Day 9&rsquo;s festival and the long drive ahead, an early dinner local and a long evening on the lodge deck is the right note. Sunset still at 9:39pm.</p>
+          </div>
+          <div class="food">
+            <div class="lab">Table for two</div>
+            <div class="row"><span class="k">lunch</span><span><b>Bluebird Caf&eacute;</b>, Coniston Pier &mdash; right where the <i>Gondola</i> docks; honest plates with a view across the water.</span></div>
+            <div class="row"><span class="k">treat</span><span><b>L&rsquo;Enclume</b>, Cartmel (Simon Rogan, three Michelin stars) &mdash; if you can book months ahead. Or <b>Rogan &amp; Co</b>, his bistro sibling next door (one star, much easier to book).</span></div>
+            <div class="row"><span class="k">at base</span><span><b>The Outgate Inn</b>, Hawkshead Hill &mdash; classic low-beamed Lakeland pub, 5 min from your lodge.</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DAY 9 -->
+      <div class="day">
+        <div class="day-index">
+          <div class="n">9</div>
+          <div class="dow">Saturday</div>
+          <div class="date">27 June</div>
+          <div class="base"><b>Homeward</b>via Windermere</div>
+        </div>
+        <div class="day-body">
+          <h3>Festival of the Lake &amp; the Long Drive South</h3>
+          <p class="day-narr">Heritage steamers and traditional boats on Windermere as a closing fanfare, then the long run home.</p>
+          <div class="tags"><span class="tag culture">Heritage</span><span class="tag culture">Arts &amp; Crafts</span><span class="tag drive">Travel</span></div>
+          <div class="stop cult">
+            <div class="time">10:00am &rarr; 1:00pm</div>
+            <div class="name">Festival of the Lake &mdash; Windermere Jetty Museum</div>
+            <p>Heritage boats, sailing trips on the original <i>Swallow</i>, traditional rowing, the Windermere boatmen&rsquo;s gathering. A lovely, low-key festival in a beautifully designed lakeside museum &mdash; included with admission. Pre-book the 30-minute heritage boat trip to avoid disappointment.</p>
+            <span class="hours warn">Sat 27 June · 10am&ndash;5pm · pre-book the boat trip</span>
+          </div>
+          <div class="stop cult">
+            <div class="time">2:00pm</div>
+            <div class="name">Blackwell &mdash; the Arts &amp; Crafts House</div>
+            <p>Five minutes south of the Jetty Museum. A serene 1900s house above Windermere, light on crowds and rich in atmosphere &mdash; beautifully restored, with a fine café and lake views. A perfect last cultural beat before the drive.</p>
+            <span class="hours warn">Open Mon&ndash;Sat 10&ndash;5</span>
+          </div>
+          <div class="stop rest">
+            <div class="time">~4:00pm</div>
+            <div class="name">Windermere &rarr; Wembley</div>
+            <p>~5h direct via M6 / M1 if you push through, or split it with one stop at <b>Tebay Services</b> (M6 J38) and another stretch in the Peak District. Aim for ~9pm home.</p>
+          </div>
+          <div class="food">
+            <div class="lab">Table for two</div>
+            <div class="row"><span class="k">lunch</span><span><b>Lakeshore caf&eacute;</b> at Windermere Jetty &mdash; seasonal plates and street food on festival day, open till 8pm.</span></div>
+            <div class="row"><span class="k">variety</span><span><b>Bodega</b>, Bowness &mdash; Valencian-run Spanish tapas, 30+ small plates; if you&rsquo;d rather skip the festival café crowd.</span></div>
+            <div class="row"><span class="k">on the road</span><span><b>Tebay Services</b> (M6 J38) &mdash; the famous family-run farm-shop motorway stop, one of the best in Britain.</span></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- WHERE TO STAY -->
+  <section>
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="sec-num">04</span>
+        <h2>Where to stay &mdash; one stopover, two bases, eight nights</h2>
+      </div>
+      <p class="lede" style="margin-top:0;margin-bottom:26px">A Manchester night to break the drive, then just <strong>two bases</strong> in the Lakes &mdash; no daily packing. The exact locations are chosen to cut driving on the busiest days: each base puts that day&rsquo;s activities (and the next morning&rsquo;s departure) almost on the doorstep.</p>
+
+      <div class="nightstrip">
+        <div class="nc" style="background:rgba(82,102,108,.10);border-color:rgba(82,102,108,.32)"><div class="nn">Night 1</div><div class="nm">Manchester</div><div class="dt">Fri 19 Jun</div></div>
+        <div class="nc a"><div class="nn">Night 2</div><div class="nm">Deepdale Hall</div><div class="dt">Sat 20 Jun</div></div>
+        <div class="nc a"><div class="nn">Night 3</div><div class="nm">Deepdale Hall</div><div class="dt">Sun 21 Jun</div></div>
+        <div class="nc a"><div class="nn">Night 4</div><div class="nm">Deepdale Hall</div><div class="dt">Mon 22 Jun</div></div>
+        <div class="nc a"><div class="nn">Night 5</div><div class="nm">Deepdale Hall</div><div class="dt">Tue 23 Jun</div></div>
+        <div class="nc b"><div class="nn">Night 6</div><div class="nm">Lakes Lodges</div><div class="dt">Wed 24 Jun</div></div>
+        <div class="nc b"><div class="nn">Night 7</div><div class="nm">Lakes Lodges</div><div class="dt">Thu 25 Jun</div></div>
+        <div class="nc b"><div class="nn">Night 8</div><div class="nm">Lakes Lodges</div><div class="dt">Fri 26 Jun</div></div>
+      </div>
+
+      <div class="stay-base">
+        <div class="where">Stopover · Manchester city centre · night 1</div>
+        <div class="stay-grid">
+          <div class="stay-card">
+            <span class="pin hotel">Recommended</span>
+            <h4>Manchester &mdash; Northern Quarter or Spinningfields</h4>
+            <p><b>Hotel Gotham</b> (King Street) for high drama and a rooftop bar; <b>King Street Townhouse</b> for a quieter boutique feel with a small infinity pool; or <b>The Edwardian Manchester</b> for classic Spinningfields polish. All within easy walk of the dinner spots.</p>
+            <div class="alt"><b>Or, for budget+character:</b> Native Manchester (apart-hotel in the old Cotton Exchange) &mdash; spacious, kitchen, good for a relaxed evening in.</div>
+          </div>
+          <div class="stay-card" style="background:transparent;box-shadow:none;border-style:dashed">
+            <span class="pin hotel">Why here</span>
+            <h4>Splits the drive in half</h4>
+            <p class="stay-why" style="margin-top:0;border-top:none;padding-top:0">~4h from Wembley, then ~1h45 onward to Patterdale next morning. Hotels with their own parking save the city-centre faff; pick one with on-site parking included in the booking.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="stay-base">
+        <div class="where">Base One · Patterdale, southern Ullswater · nights 2&ndash;5</div>
+        <div class="stay-grid">
+          <div class="stay-card">
+            <span class="pin uniq">Recommended</span>
+            <h4>Deepdale Hall Shepherd&rsquo;s Huts</h4>
+            <p>Luxury huts in a quiet valley near Patterdale &mdash; private hot tub, fizz on arrival, sheep and lambs for neighbours. Consistently 5★ from couples; exactly the intimate, off-grid feel you&rsquo;re after.</p>
+            <div class="alt"><b>Or, for a hotel + spa:</b> Another Place, The Lake (Watermillock) &mdash; ~15 min closer to the M6, but more of a family feel.</div>
+          </div>
+          <div class="stay-card" style="background:transparent;box-shadow:none;border-style:dashed">
+            <span class="pin uniq">Why here</span>
+            <h4>Logistics &amp; driving</h4>
+            <p class="stay-why" style="margin-top:0;border-top:none;padding-top:0">Solstice afternoon at <b>Castlerigg ~40 min</b>, then Day 4&rsquo;s plan is on the doorstep &mdash; <b>Glenridding pier ~5 min</b>, <b>Aira Force ~12 min</b>. Day 6&rsquo;s climb over Kirkstone Pass <b>begins right here</b>, so you cross south with zero backtracking.</p>
+            <div class="stay-why"><b>Arrival from Manchester</b> ~1h45 · <b>Buttermere day trip</b> ~1h each way.</div>
+          </div>
+        </div>
+        <div class="airbnb-line"><span class="lab">Airbnb equivalents nearby</span> shepherd&rsquo;s hut · off-grid cabin · hot tub &mdash; around <b>Patterdale, Hartsop, Glenridding</b> (e.g. Crossgate Glamping).</div>
+      </div>
+
+      <div class="stay-base" style="margin-bottom:0">
+        <div class="where">Base Two · Hawkshead · nights 6&ndash;8</div>
+        <div class="stay-grid">
+          <div class="stay-card">
+            <span class="pin hotel">Recommended</span>
+            <h4>Lakes Lodges, Hawkshead</h4>
+            <p>Cosy timber lodges with <b>private hot tubs</b> and log burners, just outside the village. The couples&rsquo; lodges are spotless, secluded and warm &mdash; a true home-from-home for the second half.</p>
+            <div class="alt"><b>Or, for a boutique inn:</b> The Drunken Duck Inn (Barngates) &mdash; rooms above a superb gastropub, a little nearer Ambleside.</div>
+          </div>
+          <div class="stay-card" style="background:transparent;box-shadow:none;border-style:dashed">
+            <span class="pin hotel">Why here</span>
+            <h4>Logistics &amp; driving</h4>
+            <p class="stay-why" style="margin-top:0;border-top:none;padding-top:0">The most central base for the south: <b>Hawkshead Grammar School ~5 min</b>, <b>Tarn Hows &amp; Hill Top ~10 min</b>, <b>Brantwood, Coniston Pier &amp; Grasmere ~20 min</b>. On Day 9 the little <b>Windermere car ferry</b> drops you near the Jetty Museum and Blackwell on the way out.</p>
+            <div class="stay-why"><b>From Patterdale</b> over Kirkstone ~45 min · <b>Drive home</b> to Wembley ~5h direct.</div>
+          </div>
+        </div>
+        <div class="airbnb-line"><span class="lab">Airbnb equivalents nearby</span> converted barn · woodland cabin · private hot tub &mdash; around <b>Hawkshead Hill, Near Sawrey, Coniston</b>.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ACCOMMODATION RATES -->
+  <section>
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="sec-num">05</span>
+        <h2>Accommodation &amp; estimated rates</h2>
+      </div>
+      <p class="lede" style="margin-top:0;margin-bottom:26px">Indicative June 2026 prices for two, room-only or self-catering as noted. <strong>Always check the booking site direct</strong> &mdash; weekend nights and proximity to school holidays push prices up. Where two figures are shown, treat them as a typical range.</p>
+
+      <div class="rate-group">
+        <div class="where">Stopover · Manchester city centre · 1 night (Fri 19 Jun)</div>
+        <div class="rate-list">
+          <div class="rate pick">
+            <div>
+              <div class="r-name">Hotel Gotham <span class="r-tag">Top pick</span></div>
+              <div class="r-desc">5-star boutique in a former 1920s bank on King Street; opulent, theatrical, rooftop bar (Honey). Premier rooms are characterful and not too small.</div>
+            </div>
+            <div class="r-loc"><b>King Street</b>~5 min walk to Spinningfields &amp; the Northern Quarter</div>
+            <div class="r-price">£140&ndash;£220<small>per night, B&amp;B optional</small></div>
+          </div>
+          <div class="rate">
+            <div>
+              <div class="r-name">King Street Townhouse <span class="r-tag alt">Quieter</span></div>
+              <div class="r-desc">40-room Italianate townhouse with a small infinity pool on the roof, deep bathtubs and a calmer pace than Gotham.</div>
+            </div>
+            <div class="r-loc"><b>King Street</b>same street as Gotham</div>
+            <div class="r-price">£170&ndash;£260<small>per night, room only</small></div>
+          </div>
+          <div class="rate">
+            <div>
+              <div class="r-name">Native Manchester <span class="r-tag alt">Apart-hotel</span></div>
+              <div class="r-desc">Spacious apartments in the old Cotton Exchange &mdash; kitchen, lounge, good if you want a relaxed in-evening with bags from the car.</div>
+            </div>
+            <div class="r-loc"><b>Ducie Street, Northern Quarter edge</b>walkable to everything</div>
+            <div class="r-price">£110&ndash;£170<small>per night, self-catering</small></div>
+          </div>
+          <div class="rate">
+            <div>
+              <div class="r-name">The Edwardian Manchester <span class="r-tag alt">Polished</span></div>
+              <div class="r-desc">Radisson Collection 5-star in Free Trade Hall; classic luxury, spa, less character than Gotham but bigger rooms and good off-peak rates.</div>
+            </div>
+            <div class="r-loc"><b>Peter Street, Spinningfields</b>large hotel with on-site parking</div>
+            <div class="r-price">£180&ndash;£280<small>per night, B&amp;B</small></div>
+          </div>
+        </div>
+        <div class="rate-note"><b>Parking:</b> Manchester city-centre street parking is painful. Filter your search to &ldquo;hotel with parking&rdquo; or budget £20&ndash;£30 for a NCP nearby (e.g. King Street car park).</div>
+      </div>
+
+      <div class="rate-group">
+        <div class="where">Base One · Patterdale, Ullswater · 4 nights (Sat 20 &ndash; Tue 23 Jun)</div>
+        <div class="rate-list">
+          <div class="rate pick">
+            <div>
+              <div class="r-name">Deepdale Hall Shepherd&rsquo;s Huts <span class="r-tag">Top pick</span></div>
+              <div class="r-desc">Three luxury huts on a working Lakeland farm (Swaledale, Highland Hideaway, Herdwick Hideaway). Two have private hot tubs; all sleep two. Quiet valley, sheep for neighbours, fizz on arrival.</div>
+            </div>
+            <div class="r-loc"><b>Patterdale, southern Ullswater</b>1 mi from village · ~1h45 from Manchester</div>
+            <div class="r-price">£160 &rarr; £120<small>per night; drops from the 3rd night</small></div>
+          </div>
+          <div class="rate">
+            <div>
+              <div class="r-name">Another Place, The Lake <span class="r-tag alt">Hotel + spa</span></div>
+              <div class="r-desc">Smart lakeside hotel with a destination spa and acclaimed restaurant (Rampsbeck). More family-feeling than the huts, but the full-service alternative if you&rsquo;d rather not self-cater.</div>
+            </div>
+            <div class="r-loc"><b>Watermillock, Ullswater</b>~15 min closer to the M6</div>
+            <div class="r-price">£320&ndash;£520<small>per night, B&amp;B; lake-view rooms higher</small></div>
+          </div>
+          <div class="rate">
+            <div>
+              <div class="r-name">Crossgate Glamping <span class="r-tag alt">Budget+</span></div>
+              <div class="r-desc">Independent shepherd&rsquo;s huts and pods nearby if Deepdale is full; similar feel, slightly more basic, often available on shorter notice.</div>
+            </div>
+            <div class="r-loc"><b>Hartsop / Glenridding area</b>same valley network</div>
+            <div class="r-price">£100&ndash;£150<small>per night, self-catering</small></div>
+          </div>
+        </div>
+        <div class="rate-note"><b>Total estimate at Deepdale (4 nights):</b> ~£560 (1 night £160 + 3 nights at £120) for two, self-catering.</div>
+      </div>
+
+      <div class="rate-group" style="margin-bottom:0">
+        <div class="where">Base Two · Hawkshead · 3 nights (Wed 24 &ndash; Fri 26 Jun)</div>
+        <div class="rate-list">
+          <div class="rate">
+            <div>
+              <div class="r-name">Lakes Lodges, Hawkshead <span class="r-tag alt">Currently full for these dates</span></div>
+              <div class="r-desc">Original first choice (deluxe timber lodges with private covered hot tubs) but fully booked for 24&ndash;26 June 2026. Worth checking for cancellations close to the date.</div>
+            </div>
+            <div class="r-loc"><b>Hawkshead Hill</b>~10 min to Brantwood, Hill Top, Tarn Hows</div>
+            <div class="r-price">£200&ndash;£280<small>not available</small></div>
+          </div>
+          <div class="rate pick">
+            <div>
+              <div class="r-name">Hawkshead Suites <span class="r-tag">New top pick</span></div>
+              <div class="r-desc">A luxury suite in the heart of the village with a <b>private glass-balcony hot tub</b>, private driveway and parking, king bed and lovely modern fit-out. Closest in spirit to Lakes Lodges &mdash; just trades the woodland setting for the cobbles, with the Grammar School Museum and Tabitha Twitchit&rsquo;s on your doorstep.</div>
+            </div>
+            <div class="r-loc"><b>Hawkshead village centre</b>walk everywhere · easy parking</div>
+            <div class="r-price">£170&ndash;£260<small>per night, self-catering</small></div>
+          </div>
+          <div class="rate">
+            <div>
+              <div class="r-name">Damson View Glamping <span class="r-tag alt">Closest match in feel</span></div>
+              <div class="r-desc">Mini timber cabins for two with king bed, kitchenette, walk-in shower, firepit outside, hot tub option &mdash; same shepherd&rsquo;s-hut intimacy as Deepdale and Lakes Lodges. Set above Bowness with valley views.</div>
+            </div>
+            <div class="r-loc"><b>Bowness-on-Windermere</b>~20 min from Hawkshead; closer to Day 9 exit</div>
+            <div class="r-price">£140&ndash;£210<small>per night, self-catering</small></div>
+          </div>
+          <div class="rate">
+            <div>
+              <div class="r-name">The Drunken Duck Inn <span class="r-tag alt">Inn-with-rooms</span></div>
+              <div class="r-desc">Seventeen rooms above one of the Lakes&rsquo; best gastropubs &mdash; gorgeous-quiet up a hill lane outside Ambleside. Breakfast included, destination-level restaurant on the doorstep. <i>No hot tub</i>, but the food and the lane are the experience.</div>
+            </div>
+            <div class="r-loc"><b>Barngates, near Ambleside</b>~7 min from Hawkshead</div>
+            <div class="r-price">£200&ndash;£330<small>per night, B&amp;B</small></div>
+          </div>
+          <div class="rate">
+            <div>
+              <div class="r-name">Coppermines &amp; Lakes Cottages <span class="r-tag alt">Cottage portfolio</span></div>
+              <div class="r-desc">Independent local agency renting a wide selection of self-catering cottages around Coniston and Hawkshead, several with hot tubs. Quality is uneven (read recent reviews on the specific cottage before booking) but the choice is unmatched.</div>
+            </div>
+            <div class="r-loc"><b>Coniston / Torver / Hawkshead area</b>various</div>
+            <div class="r-price">£140&ndash;£280<small>per night, self-catering · varies</small></div>
+          </div>
+        </div>
+        <div class="rate-note"><b>Total estimate at Hawkshead Suites (3 nights):</b> ~£510&ndash;£780 for two, self-catering. &nbsp;<b>Trip-wide accommodation envelope (8 nights):</b> roughly <b>£1,250&ndash;£1,750</b> with the new top picks, before any spa, restaurants or attraction fees.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOTEL SHORTLIST -->
+  <section>
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="sec-num">06</span>
+        <h2>Your hotel shortlist &mdash; compared</h2>
+      </div>
+      <p class="lede" style="margin-top:0;margin-bottom:18px">Thirteen properties side by side, sorted as you listed them. Rates are <b>indicative June&ndash;midweek 2026 prices for two</b>; most homepages don&rsquo;t publish nightly rates, so figures marked <i>(est.)</i> are our market estimate &mdash; always confirm direct. <span style="color:#b07f1f"><b>★</b></span> marks your starred preference (The Grand at Grasmere).</p>
+
+      <div class="hotel-table-wrap">
+        <table class="hotel-table">
+          <thead>
+            <tr>
+              <th>Hotel</th>
+              <th>Town</th>
+              <th>Rate / night</th>
+              <th>Special features</th>
+              <th>Breakfast</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="h-name"><a href="https://www.thekeswickhotel.co.uk/" target="_blank" rel="noopener">The Keswick Country House Hotel</a></span><span class="h-loc">Victorian country house, 4-acre grounds</span></td>
+              <td>Keswick</td>
+              <td><span class="h-rate">£140&ndash;£220<small>(est.)</small></span></td>
+              <td><span class="ftag">Gardens</span><span class="ftag">Restaurant &amp; bar</span><span class="ftag">2-min walk to town</span></td>
+              <td><span class="h-bk varies">Check at booking</span></td>
+            </tr>
+            <tr>
+              <td><span class="h-name"><a href="https://another.place/the-lake" target="_blank" rel="noopener">Another Place, The Lake</a></span><span class="h-loc">Lakeside contemporary resort, Ullswater</span></td>
+              <td>Watermillock (Ullswater)</td>
+              <td><span class="h-rate">£300&ndash;£520<small>(est.)</small></span></td>
+              <td><span class="ftag pool">Indoor pool</span><span class="ftag tub">Hot tub</span><span class="ftag spa">Spa &amp; sauna</span><span class="ftag">3 restaurants</span><span class="ftag">Watersports</span></td>
+              <td><span class="h-bk varies">Package-dependent</span></td>
+            </tr>
+            <tr>
+              <td><span class="h-name"><a href="https://fellpack.co.uk/fellpack-house/" target="_blank" rel="noopener">Fellpack House</a></span><span class="h-loc">11-room boutique, The Heads</span></td>
+              <td>Keswick</td>
+              <td><span class="h-rate">£180&ndash;£260<small>(est.)</small></span></td>
+              <td><span class="ftag spa">Access to The Spa at Underscar</span><span class="ftag">Restaurant adjacent</span><span class="ftag">Lounge + library</span></td>
+              <td><span class="h-bk yes">Yes &mdash; cooked to order</span></td>
+            </tr>
+            <tr>
+              <td><span class="h-name"><a href="https://www.armathwaite-hall.com/" target="_blank" rel="noopener">Armathwaite Hall Hotel &amp; Spa</a></span><span class="h-loc">Historic stately home, 400-acre estate</span></td>
+              <td>Bassenthwaite (Keswick)</td>
+              <td><span class="h-rate">£260&ndash;£450<small>(est.)</small></span></td>
+              <td><span class="ftag spa">Award-winning spa</span><span class="ftag pool">Outdoor hydrotherapy pool</span><span class="ftag pool">Indoor pool</span><span class="ftag">Wildlife park</span><span class="ftag">Fine dining</span></td>
+              <td><span class="h-bk varies">B&amp;B rates available</span></td>
+            </tr>
+            <tr>
+              <td><span class="h-name"><a href="https://www.crerarhotels.com/collection/daffodil-hotel-and-spa/" target="_blank" rel="noopener">Daffodil Hotel &amp; Spa</a></span><span class="h-loc">Contemporary lakeside design, Crerar group</span></td>
+              <td>Grasmere</td>
+              <td><span class="h-rate">£200&ndash;£350<small>(est.)</small></span></td>
+              <td><span class="ftag spa">Spa &mdash; sauna &amp; steam</span><span class="ftag pool">Hydrotherapy pool</span><span class="ftag">Lakeside terrace</span><span class="ftag">EV charging</span></td>
+              <td><span class="h-bk varies">Package-dependent</span></td>
+            </tr>
+            <tr>
+              <td><span class="h-name"><a href="https://www.mossgrove.com/" target="_blank" rel="noopener">Moss Grove Organic</a></span><span class="h-loc">5-star Victorian B&amp;B, sustainable ethos</span></td>
+              <td>Grasmere</td>
+              <td><span class="h-rate">£200&ndash;£350<small>(est.)</small></span></td>
+              <td><span class="ftag tub">Hot tub in some suites</span><span class="ftag">Organic ethos</span><span class="ftag">Complimentary afternoon tea</span></td>
+              <td><span class="h-bk yes">Yes &mdash; organic, award-winning</span></td>
+            </tr>
+            <tr>
+              <td><span class="h-name"><a href="https://www.oldvicarageambleside.co.uk/" target="_blank" rel="noopener">The Old Vicarage</a></span><span class="h-loc">15-room family-owned B&amp;B</span></td>
+              <td>Ambleside</td>
+              <td><span class="h-rate">£140&ndash;£200<small>(est.)</small></span></td>
+              <td><span class="ftag pool">Swimming pool</span><span class="ftag tub">Hot tub</span><span class="ftag spa">Sauna</span><span class="ftag">Pool table &amp; lounge</span><span class="ftag">Dog-friendly</span></td>
+              <td><span class="h-bk yes">Yes &mdash; "hearty &amp; healthy"</span></td>
+            </tr>
+            <tr>
+              <td><span class="h-name"><a href="https://salutationhotel.co.uk/" target="_blank" rel="noopener">Ambleside Salutation Hotel &amp; Spa</a></span><span class="h-loc">Town-centre hotel with spa</span></td>
+              <td>Ambleside</td>
+              <td><span class="h-rate">£180&ndash;£300<small>(est.)</small></span></td>
+              <td><span class="ftag spa">Elemis Waterfall Spa</span><span class="ftag pool">Swimming pool</span><span class="ftag spa">Sauna &amp; steam room</span></td>
+              <td><span class="h-bk varies">Package-dependent</span></td>
+            </tr>
+            <tr>
+              <td><span class="h-name"><a href="https://www.amblesidetownhouse.co.uk/" target="_blank" rel="noopener">Ambleside Townhouse</a></span><span class="h-loc">23-room luxury B&amp;B, two buildings</span></td>
+              <td>Ambleside</td>
+              <td><span class="h-rate">£130&ndash;£200<small>(est.)</small></span></td>
+              <td><span class="ftag">Town-centre walking distance</span><span class="ftag">On-site parking</span><span class="ftag">Dog-friendly rooms</span></td>
+              <td><span class="h-bk yes">Yes &mdash; locally-sourced Cumbrian</span></td>
+            </tr>
+            <tr>
+              <td><span class="h-name"><a href="https://www.hillthwaite.com/" target="_blank" rel="noopener">Hillthwaite Hotel</a></span><span class="h-loc">Family-run hotel above the lake</span></td>
+              <td>Windermere</td>
+              <td><span class="h-rate">~£175 room only<small>£155 pp B&amp;B (confirmed)</small></span></td>
+              <td><span class="ftag pool">Swimming pool</span><span class="ftag">Lake-view rooms</span><span class="ftag">On-site restaurant</span></td>
+              <td><span class="h-bk varies">B&amp;B package available, not default</span></td>
+            </tr>
+            <tr class="starred">
+              <td><span class="h-name"><span class="star">★</span><a href="https://www.grandatgrasmere.co.uk/" target="_blank" rel="noopener">The Grand at Grasmere</a></span><span class="h-loc">Boutique hotel, dramatic fell views</span></td>
+              <td>Grasmere</td>
+              <td><span class="h-rate">£200&ndash;£350<small>(est. lake-view higher)</small></span></td>
+              <td><span class="ftag gold">Your starred pick</span><span class="ftag">Private gardens</span><span class="ftag">Cafe Grand on-site</span><span class="ftag">Lake-view suites</span></td>
+              <td><span class="h-bk yes">Yes &mdash; included in all rates</span></td>
+            </tr>
+            <tr>
+              <td><span class="h-name"><a href="https://www.marymounthotel.co.uk/" target="_blank" rel="noopener">Mary Mount Hotel</a></span><span class="h-loc">Family-run, multiple buildings on Derwentwater</span></td>
+              <td>Borrowdale (Keswick)</td>
+              <td><span class="h-rate">£125&ndash;£185<small>(confirmed range)</small></span></td>
+              <td><span class="ftag">Lakeside walks</span><span class="ftag">Woodland trails</span><span class="ftag">On-site restaurant</span><span class="ftag">Dog-friendly</span></td>
+              <td><span class="h-bk yes">Yes &mdash; B&amp;B included</span></td>
+            </tr>
+            <tr>
+              <td><span class="h-name"><a href="https://www.theglenrothay.co.uk/the-badger-bar" target="_blank" rel="noopener">Glen Rothay Hotel (Badger Bar)</a></span><span class="h-loc">17th-century inn from 1624, CAMRA pub</span></td>
+              <td>Rydal (Ambleside)</td>
+              <td><span class="h-rate">£140&ndash;£200<small>(est.)</small></span></td>
+              <td><span class="ftag">Log fires</span><span class="ftag">Real ales &amp; whisky bar</span><span class="ftag">Badger feeding at dusk</span><span class="ftag">Beer gardens</span></td>
+              <td><span class="h-bk varies">Check at booking</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="table-foot">
+        <b>Quick reads from the table.</b> If a spa-and-pool day matters: <b>Armathwaite Hall</b>, <b>Another Place</b>, <b>Daffodil</b>, <b>Salutation</b> and (surprisingly) <b>The Old Vicarage</b> are the only options with both. Breakfast is <b>definitely included</b> at Fellpack House, Moss Grove, The Old Vicarage, Ambleside Townhouse, <b>The Grand at Grasmere</b>, and Mary Mount &mdash; the rest are package-dependent. Two rates are confirmed: <b>Hillthwaite</b> (~£175 room-only) and <b>Mary Mount</b> (£125&ndash;£185 B&amp;B); the rest are educated estimates &mdash; <b>book direct to confirm</b>.
+      </div>
+
+      <div class="table-foot" style="margin-top:8px"><b>If you go with The Grand at Grasmere</b> as Base Two, you swap Hawkshead for Grasmere &mdash; Wordsworth, Dove Cottage and Sam Read are then on your doorstep (Day 7 is immediate), but Hill Top, Brantwood and Coniston Pier add ~10&ndash;25 min of driving each. We can re-plan Days 6&ndash;9 around a Grasmere base if you&rsquo;d like.</div>
+    </div>
+  </section>
+
+  <!-- BOOK AHEAD + LOGISTICS -->
+  <section>
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="sec-num">07</span>
+        <h2>Book ahead &amp; on the road</h2>
+      </div>
+      <div class="twocol">
+        <div>
+          <h3 style="font-size:1.25rem;margin-bottom:14px;color:var(--moss-deep)">Reserve before you go</h3>
+          <div class="book-grid">
+            <div class="book"><div class="lbl">Dove Cottage tour</div><div class="why">Timed tickets sell out in June.</div></div>
+            <div class="book"><div class="lbl">Ullswater Steamer</div><div class="why">Pick your sailing in advance.</div></div>
+            <div class="book"><div class="lbl">Another Place spa</div><div class="why">Treatments book up early.</div></div>
+            <div class="book"><div class="lbl">Hawkshead Grammar School</div><div class="why">Walk-up usually fine but check closures.</div></div>
+            <div class="book"><div class="lbl">Manchester hotel + parking</div><div class="why">Book a room with parking included.</div></div>
+            <div class="book"><div class="lbl">Hill Top (if added)</div><div class="why">Timed entry, often sold out.</div></div>
+          </div>
+        </div>
+        <div>
+          <h3 style="font-size:1.25rem;margin-bottom:14px;color:var(--moss-deep)">On the road</h3>
+          <ul class="clean">
+            <li><b>The drive north:</b> Wembley to Manchester ~4h via M1/M6, then ~1h45 onward to Patterdale via M6 J40. Stretch your legs at <b>Tebay Services</b> (J38) &mdash; the famous family-run farm-shop motorway stop.</li>
+            <li><b>Manchester parking:</b> book a hotel with on-site parking included; city-centre street parking is painful.</li>
+            <li><b>Honister, Newlands &amp; Kirkstone</b> passes are spectacular but steep and single-track in places &mdash; take them slowly, avoid a large vehicle.</li>
+            <li>National Trust car parks (Aira Force, Tarn Hows) charge hourly and <b>fill by late morning</b> &mdash; arrive before 10am.</li>
+            <li>Pack <b>layers and a waterproof</b> (June showers blow through fast) and a little <b>midge repellent</b> for dusk by the water.</li>
+            <li>With <b>~9:40pm sunsets</b>, evenings are gloriously long &mdash; build in nothing and just watch the light.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- VARIETY ON THE PLATE -->
+  <section>
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="sec-num">08</span>
+        <h2>Beyond the British plate</h2>
+      </div>
+      <p class="lede" style="margin-top:0;margin-bottom:26px">The Lakes lean hard into gastropubs and tasting menus rooted in Cumbrian produce &mdash; gorgeous, but a heavy diet for eight days. Here&rsquo;s where to break the streak. Manchester gives you Day 1 (great food city, plenty of choice); in the Lakes, most international options cluster around Ambleside, Bowness and Coniston, so the variety lands naturally on the second half. For the Ullswater leg, the easiest swap is a 25-minute drive east to Penrith.</p>
+
+      <div class="stay-base">
+        <div class="where">Ullswater leg · Days 2&ndash;5</div>
+        <div class="stay-grid">
+          <div class="stay-card">
+            <span class="pin uniq">Italian</span>
+            <h4>Villa Bianca, Penrith</h4>
+            <p>Sardinian-run trattoria 25 min east of base &mdash; proper Italian, cosy room, the personal-host feel. The most reliable non-English option within easy reach of Patterdale. Slotted into Day 4.</p>
+          </div>
+          <div class="stay-card" style="background:transparent;box-shadow:none;border-style:dashed">
+            <span class="pin uniq">Honest note</span>
+            <h4>Slim pickings closer in</h4>
+            <p class="stay-why" style="margin-top:0;border-top:none;padding-top:0">Patterdale, Pooley Bridge and Glenridding are inn-and-tearoom country. If you want more international choice on this leg, plan one Penrith run; otherwise save your variety dinners for the southern half.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="stay-base" style="margin-bottom:0">
+        <div class="where">Coniston / Hawkshead / Ambleside leg · Days 6&ndash;9</div>
+        <div class="stay-grid">
+          <div class="stay-card">
+            <span class="pin uniq">Thai</span>
+            <h4>Doi Intanon, Ambleside</h4>
+            <p>The Lakes&rsquo; most-loved Thai &mdash; family-run for 20+ years inside the old Market Hall. No MSG; pad thai, sea-bass special, properly-spiced green/red curries, vegan-friendly. ~25 min from Hawkshead &mdash; the ideal Day 7 dinner after Grasmere.</p>
+          </div>
+          <div class="stay-card">
+            <span class="pin uniq">Italian · pizza</span>
+            <h4>Enzo&rsquo;s, Coniston</h4>
+            <p>Wood-fired pizzas from a genuine Italian-imported oven, set inside the Yewdale Inn. Casual, lively, walking distance from Coniston village &mdash; a perfect first-night option on Day 6 when you don&rsquo;t want a fuss.</p>
+          </div>
+          <div class="stay-card">
+            <span class="pin hotel">Italian · Med</span>
+            <h4>Fellinis @ Zeffirellis, Ambleside</h4>
+            <p>Award-winning vegetarian Italian-Mediterranean fine dining, set inside an independent cinema-and-jazz-bar complex. Have a pre-dinner film or a nightcap in the jazz bar and it becomes an evening, not just a meal.</p>
+          </div>
+          <div class="stay-card">
+            <span class="pin hotel">Spanish · tapas</span>
+            <h4>Bodega, Bowness</h4>
+            <p>Valencian chefs, 30+ tapas (alb&oacute;ndigas, gambas, chorizo con gambas), sangria by the jug &mdash; a sun-on-the-square Day 9 lunch alternative to the Lakeshore caf&eacute; on festival day.</p>
+          </div>
+        </div>
+        <div class="airbnb-line"><span class="lab">Also worth a look</span> <b>Lakes Hot Spot</b> (Coniston) for casual Polish-influenced pizza and chilli-jam garlic bread &middot; <b>Dodds</b> (Ambleside) for modern Mediterranean if Fellinis is full.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAMOUS VILLAGES -->
+  <section>
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="sec-num">09</span>
+        <h2>Famous Lakeland villages</h2>
+      </div>
+      <p class="lede" style="margin-top:0;margin-bottom:26px">The Lake District&rsquo;s &ldquo;towns&rdquo; are mostly villages &mdash; small, walkable, and full of character. Your bases (Patterdale and Hawkshead) put you within easy reach of the famous ones; here are twelve worth knowing, even if you only drive through. <i>North</i> means the Ullswater/Keswick half, <i>south</i> the Coniston/Windermere half, <i>west</i> the wilder valleys.</p>
+
+      <div class="villages">
+
+        <div class="village north">
+          <div class="vname">Grasmere <span class="vtag">South-central</span></div>
+          <p>Wordsworth&rsquo;s village &mdash; Dove Cottage, Sam Read bookshop (since 1887), Sarah Nelson&rsquo;s gingerbread, the poet&rsquo;s grave in St Oswald&rsquo;s churchyard, and a small jewel of a lake five minutes&rsquo; walk away.</p>
+          <span class="vmark">Day 7 · poetry &amp; bookshops</span>
+        </div>
+
+        <div class="village south">
+          <div class="vname">Hawkshead <span class="vtag">South</span></div>
+          <p>Cobbled streets, white-washed cottages, no through traffic. Wordsworth went to school here; Beatrix Potter married the village solicitor; Tabitha Twitchit&rsquo;s Bookshop now occupies her old gallery. Your Base Two village.</p>
+          <span class="vmark">Days 6&ndash;7 · literary stop</span>
+        </div>
+
+        <div class="village south">
+          <div class="vname">Ambleside <span class="vtag">South</span></div>
+          <p>The bustling hub at the head of Windermere &mdash; tiny Bridge House on the beck, the Zeffirellis cinema-and-restaurant complex, Fred Holdsworth&rsquo;s bookshop, and a short walk up to Stock Ghyll Force.</p>
+          <span class="vmark">Day 7 · culture &amp; eats</span>
+        </div>
+
+        <div class="village north">
+          <div class="vname">Keswick <span class="vtag">North</span></div>
+          <p>The northern hub on Derwentwater &mdash; Theatre by the Lake, weekly outdoor market, Greta Hall (Coleridge&rsquo;s house, now self-catering), Bryson&rsquo;s bakery, and Castlerigg ten minutes away.</p>
+          <span class="vmark">Day 3 · solstice &amp; poets</span>
+        </div>
+
+        <div class="village south">
+          <div class="vname">Bowness-on-Windermere <span class="vtag">South</span></div>
+          <p>Busy and a bit touristy, but where the ferries leave from. World of Beatrix Potter, the Bodega tapas bar, and Blackwell Arts &amp; Crafts House just south of the village. Worth a swift visit, not a long one.</p>
+          <span class="vmark">Day 8 · last lunch</span>
+        </div>
+
+        <div class="village south">
+          <div class="vname">Coniston <span class="vtag">South</span></div>
+          <p>Quiet village under the Old Man of Coniston, with the Donald Campbell water-speed legacy and Ruskin&rsquo;s Brantwood just across the water. Steam yacht <i>Gondola</i> and Arthur Ransome&rsquo;s <i>Swallows and Amazons</i> were both born here.</p>
+          <span class="vmark">Day 6 · Ruskin country</span>
+        </div>
+
+        <div class="village north">
+          <div class="vname">Patterdale &amp; Glenridding <span class="vtag">North</span></div>
+          <p>Twin villages at the foot of Helvellyn and the head of Ullswater. Patterdale (named for St Patrick, who is said to have preached here) is tiny and pubs-and-tearooms; Glenridding is the steamer pier and the path up Helvellyn. Your Base One.</p>
+          <span class="vmark">Days 2&ndash;5 · base &amp; lake</span>
+        </div>
+
+        <div class="village north">
+          <div class="vname">Pooley Bridge <span class="vtag">North</span></div>
+          <p>The northern end of Ullswater &mdash; honey-coloured stone, the river Eamont, Granny Dowbekins&rsquo; lakeside terrace, and the Michelin-recognised 1863. Quieter than Bowness and lovelier.</p>
+          <span class="vmark">Day 2 · first dinner</span>
+        </div>
+
+        <div class="village south">
+          <div class="vname">Near &amp; Far Sawrey <span class="vtag">South</span></div>
+          <p>Two tiny hamlets between Hawkshead and the Windermere ferry. Hill Top, Beatrix Potter&rsquo;s farmhouse, is in Near Sawrey &mdash; small rooms, an artist&rsquo;s garden, timed entry only. Closed Fridays.</p>
+          <span class="vmark">Optional · Beatrix Potter</span>
+        </div>
+
+        <div class="village west">
+          <div class="vname">Buttermere <span class="vtag">West</span></div>
+          <p>Twelve houses, two pubs, one impossibly pretty lake. Reached over Honister or Newlands passes. Syke Farm makes the ice cream you&rsquo;ll remember.</p>
+          <span class="vmark">Day 5 · the western detour</span>
+        </div>
+
+        <div class="village south">
+          <div class="vname">Cartmel <span class="vtag">South · just outside</span></div>
+          <p>Just outside the park&rsquo;s southern boundary &mdash; a 12th-century priory, a tiny racecourse, and Simon Rogan&rsquo;s <b>L&rsquo;Enclume</b> (three Michelin stars). Cartmel is the birthplace of sticky toffee pudding.</p>
+          <span class="vmark">Day 8 detour · gastronomy</span>
+        </div>
+
+        <div class="village west">
+          <div class="vname">Wasdale Head <span class="vtag">West · remote</span></div>
+          <p>England&rsquo;s most dramatic-feeling valley &mdash; deepest lake (Wast Water), highest mountain (Scafell Pike), and the old Wasdale Head Inn at the road end. A full day from base, but unforgettable if the weather is kind.</p>
+          <span class="vmark">Optional · for the adventurous</span>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- FOLKLORE & LOCAL TRADITIONS -->
+  <section class="events">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="sec-num">10</span>
+        <h2>Folklore &amp; local traditions</h2>
+      </div>
+      <p class="lede" style="margin-top:0;margin-bottom:26px">Cumbria&rsquo;s old customs are mostly quiet, low-key affairs &mdash; standing-stone dawns, gingerbread legends, Norse-rooted shepherd&rsquo;s tallies, and the rhythm of farming shows. Here&rsquo;s what overlaps your dates, with a few research leads worth confirming closer to the time.</p>
+
+      <div class="ev">
+        <div class="when">Sun 21 June</div>
+        <p><b>Summer solstice at Castlerigg Stone Circle</b> &mdash; sunset ~<b>21:40</b>. An informal, very local gathering: walkers, Druid Network members, the curious. No tickets, no stage &mdash; just low gold light over 5,000-year-old stones. Built into Day 3 as a few-hour late-afternoon visit.</p>
+      </div>
+
+      <div class="ev">
+        <div class="when">~19&ndash;21 June (TBC)</div>
+        <p><b>Stealing Thunder Storytelling Festival</b>, Bowland Bridge (LA11 6NN) &mdash; an annual folk gathering with renowned UK and Scandinavian storytellers, Norse-themed midsummer rituals, storywalks, ceilidhs, sitar concerts, late-night silent disco. 2025 ran 20&ndash;22 June; 2026 dates not yet posted &mdash; <a href="https://stealingthunder.co.uk/">check stealingthunder.co.uk</a>. Bowland Bridge is ~1h south of Patterdale; if it lands on your Sunday or Saturday, it&rsquo;s a magical detour, even for a single afternoon ticket.</p>
+      </div>
+
+      <div class="ev">
+        <div class="when">Fri 19 &ndash; Mon 22 June</div>
+        <p><b>Brackenrigg Inn artist-in-residence weekend</b>, Watermillock &mdash; gentle live music on the Friday and a working artist on the lawn through the weekend. Just up the lakeshore from Deepdale Hall. A drink-and-listen rather than a ticketed event.</p>
+      </div>
+
+      <div class="ev">
+        <div class="when">Throughout</div>
+        <p><b>Lakeland sports &amp; traditions in the wild</b> &mdash; <i>Cumberland &amp; Westmorland wrestling</i> (Viking-rooted, grip-and-trip jacket style), <i>hound trailing</i> (scent-tracking hounds raced across the fells), and <i>fell races</i> are still woven into village shows. June is early in the show season, but smaller gatherings pop up in valley fields &mdash; ask at your hosts and at village shops; the Patterdale, Hartsop and Hawkshead pubs are good listening posts.</p>
+      </div>
+
+      <div class="ev">
+        <div class="when">Day 7 lore</div>
+        <p><b>Sarah Nelson&rsquo;s Grasmere Gingerbread</b> &mdash; not just a snack: a closely-guarded 1854 recipe, made in the tiny former village school next to St Oswald&rsquo;s, where Wordsworth is buried. Pair it with the <b>Grasmere Rushbearing</b> story (a procession of rush-strewn floors that survived since medieval times; the 2026 ceremony is on the second Saturday of July &mdash; just after you leave, but the church carries its history all year).</p>
+      </div>
+
+      <div class="ev">
+        <div class="when">Sat 27 June</div>
+        <p><b>Festival of the Lake</b>, Windermere Jetty Museum &mdash; <b>10am&ndash;5pm</b>, heritage steamers, sailing trips on the original <i>Swallow</i>, traditional rowing, the Windermere boatmen&rsquo;s gathering. Built into Day 9 as the closing fanfare before the drive home. <i>Pre-book the 30-minute heritage boat trip.</i></p>
+      </div>
+
+      <div class="note" style="margin-top:24px">
+        <h3>How to land the folklore beats</h3>
+        <p><b>Castlerigg solstice</b> is the surest, biggest hit &mdash; arrive by 6:30pm so the light slowly builds into sunset across the stones. <b>Stealing Thunder</b> is the wildcard worth checking weekly until dates drop. The local sports and rushbearing lore are most rewarding as <i>colour</i> &mdash; conversations with hosts and a stop in St Oswald&rsquo;s churchyard &mdash; rather than scheduled events.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">
+      <div class="mark">Nine slow days, north to south.</div>
+      <div>Lake District itinerary · 19&ndash;27 June 2026 · for two · driving from Wembley</div>
+    </div>
+  </footer>
+</main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+(function(){
+  var stops = [
+    {n:1,     day:"Day 1", cat:"stay",    name:"Manchester (overnight)",       coord:[53.4808,-2.2426], note:"Northern Quarter or Spinningfields hotel; ~4h from Wembley, ~1h45 to Patterdale next day."},
+    {n:2,     day:"Day 2", cat:"stay",    name:"Deepdale Hall (Base One)",     coord:[54.5410,-2.9261], note:"Shepherd's huts, Patterdale. Nights 2–5 (four nights)."},
+    {n:2,     day:"Day 2", cat:"culture", name:"1863, Pooley Bridge",          coord:[54.6178,-2.8217], note:"Restaurant-with-rooms; first-night tasting menu."},
+    {n:3,     day:"Day 3", cat:"culture", name:"Greta Hall, Keswick",          coord:[54.6038,-3.1402], note:"Coleridge's home 1800–03; Southey's for 40 years. Exterior only — view from Chestnut Hill."},
+    {n:3,     day:"Day 3", cat:"folk",    name:"Castlerigg Stone Circle",      coord:[54.6028,-3.0975], note:"Solstice sunset ~21:40. 38 stones, 10 min east of Keswick. A few-hour late-afternoon visit."},
+    {n:3,     day:"Day 3", cat:"culture", name:"Brackenrigg Inn",              coord:[54.6118,-2.9133], note:"Artist-in-residence weekend; Sunday roast with a lake view."},
+    {n:4,     day:"Day 4", cat:"nature",  name:"Aira Force",                   coord:[54.5897,-2.9332], note:"Wooded waterfall + Gowbarrow panorama."},
+    {n:4,     day:"Day 4", cat:"nature",  name:"Glenridding pier (Steamers)",  coord:[54.5460,-2.9486], note:"Heritage Ullswater steamer; ride one way, walk the other."},
+    {n:4,     day:"Day 4", cat:"stay",    name:"Another Place — spa & dinner", coord:[54.6021,-2.8839], note:"Spa afternoon and lake-view dining; book ahead."},
+    {n:5,     day:"Day 5", cat:"drive",   name:"Honister Pass",                coord:[54.5145,-3.2186], note:"Dramatic single-track climb west to Buttermere."},
+    {n:5,     day:"Day 5", cat:"nature",  name:"Buttermere",                   coord:[54.5450,-3.2772], note:"Short 15-min lakeshore walk + Syke Farm ice cream (no full loop)."},
+    {n:5,     day:"Day 5", cat:"nature",  name:"Borrowdale & Derwentwater",    coord:[54.5811,-3.1428], note:"Lush valley + wooded shore on the loop back."},
+    {n:6,     day:"Day 6", cat:"drive",   name:"Kirkstone Pass",               coord:[54.4839,-2.9233], note:"Highest road pass in the park — Patterdale → Coniston."},
+    {n:6,     day:"Day 6", cat:"culture", name:"Hill Top — Beatrix Potter",    coord:[54.3506,-2.9711], note:"Potter's 17th-c farmhouse, Near Sawrey. Timed entry; closed Fri in term."},
+    {n:6,     day:"Day 6", cat:"culture", name:"Brantwood",                    coord:[54.3686,-3.0670], note:"Ruskin's lakeside home; terraced gardens, calm café."},
+    {n:6,     day:"Day 6", cat:"culture", name:"Tabitha Twitchit's Bookshop",  coord:[54.3759,-3.0035], note:"Second-hand bookshop (NT, opened 2025) in the former Beatrix Potter Gallery building, Hawkshead."},
+    {n:6,     day:"Day 6", cat:"stay",    name:"Lakes Lodges (Base Two)",      coord:[54.3823,-3.0167], note:"Timber lodges with private hot tubs, Hawkshead. Nights 6–8."},
+    {n:6,     day:"Day 6", cat:"culture", name:"The Drunken Duck Inn",         coord:[54.4068,-2.9783], note:"Gastropub option, Barngates — book ahead."},
+    {n:7,     day:"Day 7", cat:"culture", name:"Hawkshead Grammar School",     coord:[54.3753,-3.0033], note:"The schoolroom where Wordsworth studied age 9–17; his initials carved on a desk. Closed Tue/Wed in term."},
+    {n:7,     day:"Day 7", cat:"culture", name:"Dove Cottage, Grasmere",       coord:[54.4554,-3.0233], note:"Wordsworth's home + museum + Sarah Nelson's gingerbread."},
+    {n:7,     day:"Day 7", cat:"culture", name:"Sam Read Bookseller",          coord:[54.4567,-3.0254], note:"Independent bookshop since 1887, opposite St Oswald's, Grasmere."},
+    {n:7,     day:"Day 7", cat:"culture", name:"Rydal Mount",                  coord:[54.4486,-2.9819], note:"Wordsworth's later home and gardens; Rydal Water walk."},
+    {n:7,     day:"Day 7", cat:"culture", name:"Fred Holdsworth's Bookshop",   coord:[54.4296,-2.9620], note:"Indie bookshop since 1956, Central Buildings, Ambleside."},
+    {n:7,     day:"Day 7", cat:"nature",  name:"Tarn Hows",                    coord:[54.3994,-3.0260], note:"Flat circular upland tarn — golden-hour magic."},
+    {n:8,     day:"Day 8", cat:"nature",  name:"Steam Yacht Gondola, Coniston Pier", coord:[54.3691,-3.0793], note:"NT-restored Victorian steam yacht; 50-min cruise past Peel Island (Arthur Ransome's 'Wild Cat Island')."},
+    {n:8,     day:"Day 8", cat:"culture", name:"Cartmel village & Priory",     coord:[54.2010,-2.9486], note:"12th-c priory; birthplace of sticky toffee pudding; L'Enclume nearby."},
+    {n:9,     day:"Day 9", cat:"folk",    name:"Festival of the Lake — Windermere Jetty Museum", coord:[54.3640,-2.9237], note:"Sat 27 Jun · 10am–5pm. Heritage boats, sailing on 'Swallow', boatmen's gathering."},
+    {n:9,     day:"Day 9", cat:"culture", name:"Blackwell Arts & Crafts House",coord:[54.3450,-2.9301], note:"Serene 1900s house above Windermere; café, lake views. 5 min south of the Jetty."},
+    {n:"·",   day:"Aside", cat:"folk",    name:"Stealing Thunder Festival",    coord:[54.2812,-2.8767], note:"Storytelling, ceilidh, midsummer myths — Bowland Bridge. 2026 dates TBC."}
+  ];
+
+  var paperTile = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &middot; &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    subdomains:'abcd',
+    maxZoom:19
+  });
+
+  var map = L.map('trip-map', {scrollWheelZoom:false, layers:[paperTile]});
+  var group = L.featureGroup();
+
+  stops.forEach(function(s){
+    var html = '<div class="map-pin ' + s.cat + '">' + s.n + '</div>';
+    var icon = L.divIcon({className:'', html:html, iconSize:[26,26], iconAnchor:[13,13], popupAnchor:[0,-12]});
+    var marker = L.marker(s.coord, {icon:icon, title:s.name});
+    var popup = '<span class="pop-meta ' + s.cat + '">' + s.day + '</span><b>' + s.name + '</b>' + s.note;
+    marker.bindPopup(popup);
+    marker.addTo(group);
+  });
+
+  group.addTo(map);
+  map.fitBounds(group.getBounds(), {padding:[36,36]});
+
+  // re-enable wheel-zoom only when the user clicks into the map
+  map.on('focus', function(){ map.scrollWheelZoom.enable(); });
+  map.on('blur',  function(){ map.scrollWheelZoom.disable(); });
+})();
+</script>
+
+</body>
+</html>
